@@ -1,3 +1,8 @@
+# Added by zouharvi
+*.bkp
+*.dtmp
+computed
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

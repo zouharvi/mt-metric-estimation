@@ -1,0 +1,11 @@
+sacrebleu
+fairseq
+torch
+datasets
+tqdm
+
+# fairseq implicit requirements
+fastBPE
+sacremoses
+subword_nmt
+tensorboardX
