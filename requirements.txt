@@ -3,6 +3,7 @@ fairseq
 torch
 datasets
 tqdm
+bpe
 
 # fairseq implicit requirements
 fastBPE

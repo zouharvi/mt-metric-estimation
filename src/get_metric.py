@@ -28,7 +28,6 @@ if __name__== "__main__":
         conf_score = float(line[3])
         metric_score = metric.sentence_score(hypothesis=sent_tgt, references=[sent_ref]).score
 
-        print(line, metric_score)
         fwriter.writerow((sent_src, sent_ref, sent_tgt, conf_score, metric_score))
 
         if line_i % 100 == 0:
