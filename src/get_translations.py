@@ -17,7 +17,8 @@ if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument("-o", "--output", default="computed/de_en.csv")
     args.add_argument("--overwrite", action="store_true")
-    args.add_argument("-t", "--total", type=int, default=1000000)
+    args.add_argument("-ns", "--n-start", type=int, default=0)
+    args.add_argument("-ne", "--n-end", type=int, default=1000)
     args = args.parse_args()
 
     if os.path.exists(args.output) and not args.overwrite:
@@ -36,14 +37,14 @@ if __name__ == "__main__":
     model.eval()
     model = model.to(DEVICE)
 
-    data = datasets.load_dataset("wmt14", "de-en")["train"]["translation"]
+    data = datasets.load_dataset("wmt14", "de-en")["train"]
 
     f = open(args.output, "w")
     fwriter = csv.writer(f, quoting=csv.QUOTE_ALL)
 
     for sent_i, sent in enumerate(tqdm.tqdm(
-        data[:args.total],
-        total=args.total, miniters=100,
+        data[args.n_start*1000:args.n_end*1000]["translation"],
+        total=args.n_end*1000-args.n_start*1000, miniters=100,
     )):
         sent_src = sent["de"]
         sent_ref = sent["en"]
@@ -60,6 +61,5 @@ if __name__ == "__main__":
         # force flush file & tqdm
         if sent_i % 100 == 0:
             f.flush()
-            sys.stderr.flush()
 
     f.close()
