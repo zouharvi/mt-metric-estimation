@@ -12,10 +12,8 @@ if __name__== "__main__":
     args.add_argument("-o", "--output", default="computed/de_en_metric.csv")
     args = args.parse_args()
 
-    if args.metric == "bleu":
-        metric = sacrebleu.metrics.BLEU(effective_order=True)
-    else:
-        raise Exception(f"Unknown metric {args.metric}")
+    bleu_metric = sacrebleu.metrics.BLEU(effective_order=True)
+    chrf_metric = sacrebleu.metrics.CHRF()
 
     fin = open(args.input, "r")
     fout = open(args.output, "w")
@@ -26,9 +24,13 @@ if __name__== "__main__":
         sent_ref = line[1]
         sent_tgt = line[2]
         conf_score = float(line[3])
-        metric_score = metric.sentence_score(hypothesis=sent_tgt, references=[sent_ref]).score
+        bleu_score = bleu_metric.sentence_score(hypothesis=sent_tgt, references=[sent_ref]).score
+        chrf_score = chrf_score.sentence_score(hypothesis=sent_tgt, references=[sent_ref]).score
 
-        fwriter.writerow((sent_src, sent_ref, sent_tgt, conf_score, metric_score))
+        fwriter.writerow((
+            sent_src, sent_ref, sent_tgt, conf_score,
+            bleu_score, chrf_score
+        ))
 
         if line_i % 100 == 0:
             fout.flush()

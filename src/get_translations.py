@@ -17,6 +17,7 @@ if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument("-o", "--output", default="computed/de_en.csv")
     args.add_argument("--overwrite", action="store_true")
+    args.add_argument("--direction", default="de-en")
     args.add_argument("-ns", "--n-start", type=int, default=0)
     args.add_argument("-ne", "--n-end", type=int, default=1000)
     args = args.parse_args()
@@ -27,11 +28,18 @@ if __name__ == "__main__":
         exit()
 
     model = torch.hub.load(
-        'pytorch/fairseq', 'transformer.wmt19.de-en',
+        'pytorch/fairseq', f'transformer.wmt19.{args.direction}',
         checkpoint_file='model1.pt:model2.pt:model3.pt:model4.pt',
         tokenizer='moses', bpe='fastbpe',
         verbose=False,
     )
+
+    if args.direction == "de-en":
+        src_lang = "de"
+        tgt_lang = "en"
+    elif args.direction == "en-de":
+        src_lang = "en"
+        tgt_lang = "de"
     
     # disable dropout
     model.eval()
@@ -46,8 +54,8 @@ if __name__ == "__main__":
         data[args.n_start*1000:args.n_end*1000]["translation"],
         total=args.n_end*1000-args.n_start*1000, miniters=100,
     )):
-        sent_src = sent["de"]
-        sent_ref = sent["en"]
+        sent_src = sent[src_lang]
+        sent_ref = sent[tgt_lang]
         sent_src_enc = model.encode(sent_src)
         # TODO: change nbest to higher numbers and see whether we can make the metric prediction
         # better with same data size

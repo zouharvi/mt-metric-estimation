@@ -2,46 +2,16 @@ import sys
 sys.path.append("src")
 import utils
 import torch
-import bpe
 import tqdm
 import numpy as np
 
 DEVICE = utils.get_device()
 
-
-class Encoder():
-    def __init__(self, vocab_size):
-        self.bpe = bpe.Encoder(vocab_size=vocab_size)
-
-    def fit(self, data):
-        assert type(data) == list
-        self.bpe.fit(data)
-
-    def transform(self, data):
-        if type(data) == list:
-            return self.bpe.transform(data)
-        elif type(data) is str:
-            return self.bpe.transform([data])[0]
-        else:
-            raise Exception("Unknown input data type")
-
-    def tokenize(self, data):
-        if type(data) == list:
-            return self.bpe.tokenize(data)
-        elif type(data) is str:
-            return self.bpe.tokenize([data])[0]
-        else:
-            raise Exception("Unknown input data type")
-
-    def decode(self, data):
-        # not used in this project
-        pass
-
-
-class MEModel1(torch.nn.Module):
-    def __init__(self, vocab_size, embd_size, hidden_size):
+class MEModelRNN(torch.nn.Module):
+    def __init__(self, vocab_size, embd_size, hidden_size, fusion=None, sigmoid=True, relu=False):
         super().__init__()
         self.vocab_size = vocab_size
+        self.fusion = fusion
 
         self.embd = torch.nn.Linear(vocab_size, embd_size)
 
@@ -53,11 +23,16 @@ class MEModel1(torch.nn.Module):
             bidirectional=True,
             batch_first=True,
         )
+
+        extra_features = 0
+        if fusion == 1:
+            extra_features += 6
+
         self.regressor = torch.nn.Sequential(
-            torch.nn.Linear(hidden_size * 2, 100),
+            torch.nn.Linear(hidden_size * 2 + extra_features, 100),
+            torch.nn.ReLU() if relu else torch.nn.Identity(),
             torch.nn.Linear(100, 1),
-            # TODO: remove me
-            torch.nn.Sigmoid(),
+            torch.nn.Sigmoid() if sigmoid else torch.nn.Identity(),
         )
 
         self.loss_fn = torch.nn.MSELoss()
@@ -67,7 +42,23 @@ class MEModel1(torch.nn.Module):
         # move to GPU
         self.to(DEVICE)
 
-    def forward(self, x):
+    def forward(self, sent):
+        # get gpu handle
+        x = torch.tensor(sent["src+hyp_bpe"])
+        x = torch.nn.functional.one_hot(
+            x, num_classes=self.vocab_size
+        ).float().to(DEVICE)
+
+        len_src = len(sent["src"].split())
+        len_hyp = len(sent["hyp"].split())
+        x_extra = torch.tensor([
+            sent["conf"], np.exp(sent["conf"]),
+            len_src, len_hyp,
+            len_src - len_hyp,
+            len_src / len_hyp,
+        ]
+        ).to(DEVICE)
+
         x = self.embd(x)
         # print("a", x.shape)
 
@@ -82,8 +73,11 @@ class MEModel1(torch.nn.Module):
         # print("c", x.shape)
         x = torch.hstack((x[0], x[1]))
         # print("d", x.shape)
-        x = self.regressor(x)
+        if self.fusion == 1:
+            x = torch.hstack((x, x_extra))
         # print("e", x.shape)
+        x = self.regressor(x)
+        # print("f", x.shape)
         return x
 
     def eval_dev(self, data_dev):
@@ -93,15 +87,11 @@ class MEModel1(torch.nn.Module):
         with torch.no_grad():
             for sample_i, sent in enumerate(tqdm.tqdm(data_dev)):
                 # TODO: add batching
-
-                # get gpu handle
-                sent_bpe = torch.tensor(sent["src+hyp_bpe"])
-                sent_bpe = torch.nn.functional.one_hot(
-                    sent_bpe, num_classes=self.vocab_size).float().to(DEVICE)
-                score_pred = self.forward(sent_bpe)
+                score_pred = self.forward(sent)
 
                 score = torch.tensor(
-                    [sent["bleu"]], requires_grad=False).to(DEVICE)
+                    [sent["bleu"]], requires_grad=False
+                ).to(DEVICE)
                 loss = self.loss_fn(score_pred, score)
 
                 dev_losses.append(loss.detach().cpu().item())
@@ -109,7 +99,7 @@ class MEModel1(torch.nn.Module):
 
         return dev_losses, dev_pred
 
-    def train_epochs(self, data_train, data_dev, epochs=50, logger=None):
+    def train_epochs(self, data_train, data_dev, epochs=10, logger=None):
         for epoch in range(1, epochs + 1):
             self.train(True)
 
@@ -118,12 +108,7 @@ class MEModel1(torch.nn.Module):
 
             for sample_i, sent in enumerate(tqdm.tqdm(data_train)):
                 # TODO: add batching
-
-                # get gpu handle
-                sent_bpe = torch.tensor(sent["src+hyp_bpe"])
-                sent_bpe = torch.nn.functional.one_hot(
-                    sent_bpe, num_classes=self.vocab_size).float().to(DEVICE)
-                score_pred = self.forward(sent_bpe)
+                score_pred = self.forward(sent)
 
                 score = torch.tensor(
                     [sent["bleu"]], requires_grad=False).to(DEVICE)
