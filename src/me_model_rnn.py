@@ -8,7 +8,7 @@ import numpy as np
 DEVICE = utils.get_device()
 
 class MEModelRNN(torch.nn.Module):
-    def __init__(self, vocab_size, embd_size, hidden_size, fusion=None, sigmoid=True, relu=False):
+    def __init__(self, vocab_size, embd_size, hidden_size, fusion=None, sigmoid=True, relu=False, dropout=0.0):
         super().__init__()
         self.vocab_size = vocab_size
         self.fusion = fusion
@@ -30,6 +30,7 @@ class MEModelRNN(torch.nn.Module):
 
         self.regressor = torch.nn.Sequential(
             torch.nn.Linear(hidden_size * 2 + extra_features, 100),
+            torch.nn.Dropout(p=dropout),
             torch.nn.ReLU() if relu else torch.nn.Identity(),
             torch.nn.Linear(100, 1),
             torch.nn.Sigmoid() if sigmoid else torch.nn.Identity(),

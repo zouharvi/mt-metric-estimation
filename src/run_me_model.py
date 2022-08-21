@@ -43,6 +43,18 @@ if __name__ == "__main__":
         from me_model_rnn import MEModelRNN
         vocab_size = 8192
         model = MEModelRNN(vocab_size, 512, 128, sigmoid=True, relu=True)
+    elif args.model == "1d05":
+        from me_model_rnn import MEModelRNN
+        vocab_size = 8192
+        model = MEModelRNN(vocab_size, 512, 128, sigmoid=True, relu=True, dropout=0.05)
+    elif args.model == "1d10":
+        from me_model_rnn import MEModelRNN
+        vocab_size = 8192
+        model = MEModelRNN(vocab_size, 512, 128, sigmoid=True, relu=True, dropout=0.10)
+    elif args.model == "1d20":
+        from me_model_rnn import MEModelRNN
+        vocab_size = 8192
+        model = MEModelRNN(vocab_size, 512, 128, sigmoid=True, relu=True, dropout=0.20)
     elif args.model == "b":
         from me_model_b import MEModelBaseline
         model = MEModelBaseline()
