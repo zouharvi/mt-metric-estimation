@@ -14,6 +14,7 @@ if __name__ == "__main__":
     args.add_argument("-d", "--data", default="computed/de_en_metric.csv")
     args.add_argument("-m", "--model", default="1")
     args.add_argument("-f", "--fusion", type=int, default=None)
+    args.add_argument("--metric", default="bleu")
     args.add_argument(
         "-l", "--logfile",
         default="logs/de_en_outroop.jsonl"
@@ -36,9 +37,10 @@ if __name__ == "__main__":
                 "hyp": sent[2],
                 "conf": float(sent[3]),
                 "bleu": float(sent[4]) / 100,
+                "chrf": float(sent[5]),
             }
-            for sent in list(csv.reader(f))
-        ][:490000 + 10000]
+            for sent in list(csv.reader(f))[:490000 + 10000]
+        ]
 
     encoder = utils.BPEEncoder(vocab_size)
     encoder.fit([x["src+hyp"] for x in data])
@@ -59,4 +61,4 @@ if __name__ == "__main__":
         # flushes at the end
 
     print(f"Training model {args.model} with fusion {args.fusion}")
-    model.train_epochs(data_train, data_dev, logger=log_step)
+    model.train_epochs(data_train, data_dev, metric=args.metric, logger=log_step)

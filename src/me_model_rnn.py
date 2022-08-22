@@ -100,7 +100,7 @@ class MEModelRNN(torch.nn.Module):
 
         return x
 
-    def eval_dev(self, data_dev):
+    def eval_dev(self, data_dev, metric):
         self.train(False)
         dev_losses = []
         dev_pred = []
@@ -110,7 +110,7 @@ class MEModelRNN(torch.nn.Module):
                 score_pred = self.forward(sent)
 
                 score = torch.tensor(
-                    [sent["bleu"]], requires_grad=False
+                    [sent[metric]], requires_grad=False
                 ).to(DEVICE)
                 loss = self.loss_fn(score_pred, score)
 
@@ -119,7 +119,7 @@ class MEModelRNN(torch.nn.Module):
 
         return dev_losses, dev_pred
 
-    def train_epochs(self, data_train, data_dev, epochs=10, logger=None):
+    def train_epochs(self, data_train, data_dev, metric="bleu", epochs=10, logger=None):
         for epoch in range(1, epochs + 1):
             self.train(True)
 
@@ -131,7 +131,7 @@ class MEModelRNN(torch.nn.Module):
                 score_pred = self.forward(sent)
 
                 score = torch.tensor(
-                    [sent["bleu"]], requires_grad=False).to(DEVICE)
+                    [sent[metric]], requires_grad=False).to(DEVICE)
                 loss = self.loss_fn(score_pred, score)
 
                 # backpropagation
@@ -144,8 +144,8 @@ class MEModelRNN(torch.nn.Module):
 
             # logging dev stuff
             dev_losses, dev_pred = self.eval_dev(data_dev)
-            data_dev_score = [sent["bleu"] for sent in data_dev]
-            data_train_score = [sent["bleu"] for sent in data_train]
+            data_dev_score = [sent[metric] for sent in data_dev]
+            data_train_score = [sent[metric] for sent in data_train]
 
             print(f"Epoch {epoch:0>5}")
             if logger is not None:

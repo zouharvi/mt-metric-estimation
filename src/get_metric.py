@@ -4,6 +4,7 @@ import argparse
 import sacrebleu
 import csv
 import tqdm
+import evaluate
 
 if __name__== "__main__":
     args = argparse.ArgumentParser()
@@ -14,6 +15,9 @@ if __name__== "__main__":
 
     bleu_metric = sacrebleu.metrics.BLEU(effective_order=True)
     chrf_metric = sacrebleu.metrics.CHRF()
+    ter_metric = sacrebleu.metrics.TER()
+    meteor_metric = evaluate.load('meteor')
+    comet_metric = evaluate.load('comet')
 
     fin = open(args.input, "r")
     fout = open(args.output, "w")
@@ -26,10 +30,15 @@ if __name__== "__main__":
         conf_score = float(line[3])
         bleu_score = bleu_metric.sentence_score(hypothesis=sent_tgt, references=[sent_ref]).score
         chrf_score = chrf_metric.sentence_score(hypothesis=sent_tgt, references=[sent_ref]).score
+        # this metric is quite slow
+        ter_score = ter_metric.sentence_score(hypothesis=sent_tgt, references=[sent_ref]).score
+        meteor_score = meteor_metric.compute(predictions=[sent_tgt], references=[sent_ref])["meteor"]
+        comet_score = comet_metric.compute(predictions=[sent_tgt], references=[sent_ref], sources=[sent_src])["scores"][0]
 
         fwriter.writerow((
             sent_src, sent_ref, sent_tgt, conf_score,
-            bleu_score, chrf_score
+            bleu_score, chrf_score, ter_metric,
+            meteor_score, comet_score
         ))
 
         if line_i % 100 == 0:

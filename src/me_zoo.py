@@ -70,6 +70,11 @@ def get_model(args):
         # not used for the model but still needs to be defined
         vocab_size = 8192
         model = MEModelBaselineDense(sigmoid=True, batch_size=10)
+    elif args.model == "bdlb10":
+        from me_model_b_dense import MEModelBaselineDense
+        # not used for the model but still needs to be defined
+        vocab_size = 8192
+        model = MEModelBaselineDense(sigmoid=False, batch_size=10)
     elif args.model == "b":
         from me_model_b import MEModelBaseline
         # not used for the model but still needs to be defined
