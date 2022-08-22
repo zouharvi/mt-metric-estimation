@@ -47,6 +47,29 @@ def get_model(args):
         from me_model_rnn import MEModelRNN
         vocab_size = 8192
         model = MEModelRNN(vocab_size, 512, 128, sigmoid=True, relu=True, dropout=0.20, num_layers=2)
+    elif args.model == "1hd75":
+        from me_model_rnn import MEModelRNN
+        vocab_size = 8192
+        model = MEModelRNN(vocab_size, 512, 128, sigmoid=True, relu=True, dropout=0.0, final_hidden_dropout=0.75)
+    elif args.model == "1d20ss12":
+        from me_model_rnn import MEModelRNN
+        vocab_size = 8192
+        model = MEModelRNN(vocab_size, 512, 128, sigmoid=True, relu=True, dropout=0.20, sigmoid_scale=1.2)
+    elif args.model == "bd":
+        from me_model_b_dense import MEModelBaselineDense
+        # not used for the model but still needs to be defined
+        vocab_size = 8192
+        model = MEModelBaselineDense(sigmoid=True)
+    elif args.model == "bdl":
+        from me_model_b_dense import MEModelBaselineDense
+        # not used for the model but still needs to be defined
+        vocab_size = 8192
+        model = MEModelBaselineDense(sigmoid=False)
+    elif args.model == "bdb10":
+        from me_model_b_dense import MEModelBaselineDense
+        # not used for the model but still needs to be defined
+        vocab_size = 8192
+        model = MEModelBaselineDense(sigmoid=True, batch_size=10)
     elif args.model == "b":
         from me_model_b import MEModelBaseline
         # not used for the model but still needs to be defined

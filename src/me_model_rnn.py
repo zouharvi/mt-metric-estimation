@@ -7,11 +7,18 @@ import numpy as np
 
 DEVICE = utils.get_device()
 
+
 class MEModelRNN(torch.nn.Module):
-    def __init__(self, vocab_size, embd_size, hidden_size, fusion=None, sigmoid=True, relu=False, dropout=0.0, num_layers=1):
+    def __init__(
+        self, vocab_size, embd_size, hidden_size,
+        fusion=None, sigmoid=True, relu=False, dropout=0.0, num_layers=1, final_hidden_dropout=0.0, sigmoid_scale=1.0
+    ):
         super().__init__()
         self.vocab_size = vocab_size
         self.fusion = fusion
+        assert sigmoid_scale >= 1.0
+        self.sigmoid_scale = sigmoid_scale
+        self.sigmoid_offset = (sigmoid_scale-1)/2
 
         self.embd = torch.nn.Linear(vocab_size, embd_size)
 
@@ -23,12 +30,17 @@ class MEModelRNN(torch.nn.Module):
             bidirectional=True,
             batch_first=True,
             num_layers=num_layers,
+            # only aplied when num_layers > 1
+            dropout=0.2,
         )
 
         extra_features = 0
         if fusion == 1:
             extra_features += 6
 
+        self.final_hidden_dropout = torch.nn.Dropout(p=final_hidden_dropout)
+
+        # TODO: deeper model
         self.regressor = torch.nn.Sequential(
             torch.nn.Linear(hidden_size * 2 + extra_features, 100),
             torch.nn.Dropout(p=dropout),
@@ -74,12 +86,18 @@ class MEModelRNN(torch.nn.Module):
         # concatenate forward and backward runs
         # print("c", x.shape)
         x = torch.hstack((x[0], x[1]))
+        # apply large dropout on the hidden state
+        x = self.final_hidden_dropout(x)
+
         # print("d", x.shape)
         if self.fusion == 1:
             x = torch.hstack((x, x_extra))
         # print("e", x.shape)
         x = self.regressor(x)
         # print("f", x.shape)
+        # multiply final sigmoid output and center
+        x = x * self.sigmoid_scale - self.sigmoid_offset
+
         return x
 
     def eval_dev(self, data_dev):

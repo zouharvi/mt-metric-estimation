@@ -7,7 +7,6 @@ import tqdm
 
 if __name__== "__main__":
     args = argparse.ArgumentParser()
-    args.add_argument("-m", "--metric", default="bleu")
     args.add_argument("-i", "--input", default="computed/de_en.csv")
     args.add_argument("-o", "--output", default="computed/de_en_metric.csv")
     args.add_argument("-t", "--total", type=int, default=None)
