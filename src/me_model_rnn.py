@@ -8,7 +8,7 @@ import numpy as np
 DEVICE = utils.get_device()
 
 class MEModelRNN(torch.nn.Module):
-    def __init__(self, vocab_size, embd_size, hidden_size, fusion=None, sigmoid=True, relu=False, dropout=0.0):
+    def __init__(self, vocab_size, embd_size, hidden_size, fusion=None, sigmoid=True, relu=False, dropout=0.0, num_layers=1):
         super().__init__()
         self.vocab_size = vocab_size
         self.fusion = fusion
@@ -22,6 +22,7 @@ class MEModelRNN(torch.nn.Module):
             hidden_size=hidden_size,
             bidirectional=True,
             batch_first=True,
+            num_layers=num_layers,
         )
 
         extra_features = 0

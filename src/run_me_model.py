@@ -7,6 +7,7 @@ import argparse
 import json
 import csv
 import os
+import me_zoo
 
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
@@ -15,51 +16,11 @@ if __name__ == "__main__":
     args.add_argument("-f", "--fusion", type=int, default=None)
     args.add_argument(
         "-l", "--logfile",
-        default="computed/de_en_outroop.jsonl"
+        default="logs/de_en_outroop.jsonl"
     )
     args = args.parse_args()
 
-    if args.model == "1":
-        from me_model_rnn import MEModelRNN
-        vocab_size = 8192
-        model = MEModelRNN(vocab_size, 512, 128, sigmoid=True)
-    elif args.model == "1l":
-        from me_model_rnn import MEModelRNN
-        vocab_size = 8192
-        model = MEModelRNN(vocab_size, 512, 128, sigmoid=False)
-    elif args.model == "1s":
-        from me_model_rnn import MEModelRNN
-        vocab_size = 4096
-        model = MEModelRNN(vocab_size, 256, 64, sigmoid=True)
-    elif args.model == "1sv":
-        from me_model_rnn import MEModelRNN
-        vocab_size = 8192
-        model = MEModelRNN(vocab_size, 256, 64, sigmoid=True)
-    elif args.model == "1sV":
-        from me_model_rnn import MEModelRNN
-        vocab_size = 8192*2
-        model = MEModelRNN(vocab_size, 256, 64, sigmoid=True)
-    elif args.model == "1r":
-        from me_model_rnn import MEModelRNN
-        vocab_size = 8192
-        model = MEModelRNN(vocab_size, 512, 128, sigmoid=True, relu=True)
-    elif args.model == "1d05":
-        from me_model_rnn import MEModelRNN
-        vocab_size = 8192
-        model = MEModelRNN(vocab_size, 512, 128, sigmoid=True, relu=True, dropout=0.05)
-    elif args.model == "1d10":
-        from me_model_rnn import MEModelRNN
-        vocab_size = 8192
-        model = MEModelRNN(vocab_size, 512, 128, sigmoid=True, relu=True, dropout=0.10)
-    elif args.model == "1d20":
-        from me_model_rnn import MEModelRNN
-        vocab_size = 8192
-        model = MEModelRNN(vocab_size, 512, 128, sigmoid=True, relu=True, dropout=0.20)
-    elif args.model == "b":
-        from me_model_b import MEModelBaseline
-        model = MEModelBaseline()
-    else:
-        raise Exception("Unknown model")
+    model, vocab_size = me_zoo.get_model(args)
 
     if os.path.exists(args.logfile):
         print("Logfile already exists, refusing to continue")
@@ -77,7 +38,7 @@ if __name__ == "__main__":
                 "bleu": float(sent[4]) / 100,
             }
             for sent in list(csv.reader(f))
-        ][:150000 + 10000]
+        ][:490000 + 10000]
 
     encoder = utils.BPEEncoder(vocab_size)
     encoder.fit([x["src+hyp"] for x in data])
