@@ -3,10 +3,9 @@
 import torch
 import datasets
 import tqdm
-import csv
 import argparse
 import os
-import sys
+import json
 # if fairseq is not imported here, it's cythoned from hub which is less robust
 # possibly requires gcc >= 9.3.0?
 import fairseq
@@ -15,7 +14,7 @@ DEVICE = torch.device("cuda:0")
 
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
-    args.add_argument("-o", "--output", default="computed/de_en.csv")
+    args.add_argument("-o", "--output", default="computed/de_en.jsonl")
     args.add_argument("--overwrite", action="store_true")
     args.add_argument("--direction", default="de-en")
     args.add_argument("-ns", "--n-start", type=int, default=0)
@@ -48,7 +47,6 @@ if __name__ == "__main__":
     data = datasets.load_dataset("wmt14", "de-en")["train"]
 
     f = open(args.output, "w")
-    fwriter = csv.writer(f, quoting=csv.QUOTE_ALL)
 
     for sent_i, sent in enumerate(tqdm.tqdm(
         data[args.n_start*1000:args.n_end*1000]["translation"],
@@ -59,12 +57,17 @@ if __name__ == "__main__":
         sent_src_enc = model.encode(sent_src)
         # TODO: change nbest to higher numbers and see whether we can make the metric prediction
         # better with same data size
-        sent_tgt_enc = model.generate(sent_src_enc, nbest=1)[0]
-        sent_tgt = model.decode(sent_tgt_enc["tokens"])
-        sent_tgt_score = sent_tgt_enc["score"].item()
+        sent_tgt_enc = model.generate(sent_src_enc, nbest=5)
+        sent_tgt = [(model.decode(x["tokens"]), x["score"].item()) for x in sent_tgt_enc]
         # print(sent_tgt, sent_tgt_score, sent_tgt_enc.keys())
 
-        fwriter.writerow((sent_src, sent_ref, sent_tgt, sent_tgt_score))
+        sent_line = {
+            "src": sent_src,
+            "ref": sent_ref,
+            "tgts": sent_tgt,
+        }
+        f.write(json.dumps(sent_line, ensure_ascii=False))
+        f.write("\n")
 
         # force flush file & tqdm
         if sent_i % 100 == 0:
