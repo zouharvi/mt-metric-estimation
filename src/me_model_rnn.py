@@ -1,3 +1,4 @@
+import random
 import sys
 sys.path.append("src")
 import utils
@@ -139,7 +140,7 @@ class MEModelRNN(torch.nn.Module):
             train_pred = []
             batch = []
 
-            # TODO shuffle
+            # random.shuffle(data_train)
 
             for sample_i, sent in enumerate(tqdm.tqdm(data_train)):
                 batch.append(sent)
