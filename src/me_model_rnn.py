@@ -10,15 +10,16 @@ DEVICE = utils.get_device()
 
 class MEModelRNN(torch.nn.Module):
     def __init__(
-        self, vocab_size, embd_size, hidden_size,
+        self, vocab_size, embd_size, hidden_size, batch_size=1,
         fusion=None, sigmoid=True, relu=False, dropout=0.0, num_layers=1, final_hidden_dropout=0.0, sigmoid_scale=1.0
     ):
         super().__init__()
         self.vocab_size = vocab_size
+        self.batch_size = batch_size
         self.fusion = fusion
         assert sigmoid_scale >= 1.0
         self.sigmoid_scale = sigmoid_scale
-        self.sigmoid_offset = (sigmoid_scale-1)/2
+        self.sigmoid_offset = (sigmoid_scale - 1) / 2
 
         self.embd = torch.nn.Linear(vocab_size, embd_size)
 
@@ -42,7 +43,8 @@ class MEModelRNN(torch.nn.Module):
 
         # TODO: deeper model
         self.regressor = torch.nn.Sequential(
-            torch.nn.Linear(hidden_size * 2 + extra_features, 100),
+            torch.nn.Linear(num_layers * hidden_size *
+                            2 + extra_features, 100),
             torch.nn.Dropout(p=dropout),
             torch.nn.ReLU() if relu else torch.nn.Identity(),
             torch.nn.Linear(100, 1),
@@ -56,45 +58,47 @@ class MEModelRNN(torch.nn.Module):
         # move to GPU
         self.to(DEVICE)
 
-    def forward(self, sent):
-        # get gpu handle
-        x = torch.tensor(sent["src+hyp_bpe"])
-        x = torch.nn.functional.one_hot(
-            x, num_classes=self.vocab_size
-        ).float().to(DEVICE)
+    def forward(self, sents):
+        local_batch_size = len(sents)
 
-        len_src = len(sent["src"].split())
-        len_hyp = len(sent["hyp"].split())
-        x_extra = torch.tensor([
-            sent["conf"], np.exp(sent["conf"]),
-            len_src, len_hyp,
-            len_src - len_hyp,
-            len_src / len_hyp,
+        # get gpu handle
+        x = [
+            torch.nn.functional.one_hot(
+                torch.tensor(sent["src+hyp_bpe"]), num_classes=self.vocab_size
+            ).float().to(DEVICE) for sent in sents
         ]
+        x = torch.nn.utils.rnn.pad_sequence(x, batch_first=True)
+
+        len_src = [len(sent["src"].split()) for sent in sents]
+        len_hyp = [len(sent["hyp"].split()) for sent in sents]
+        x_extra = torch.tensor(
+            [
+                [
+                    sent["conf"], np.exp(sent["conf"]),
+                    len_src[sent_i], len_hyp[sent_i],
+                    len_src[sent_i] - len_hyp[sent_i],
+                    len_src[sent_i] / len_hyp[sent_i],
+                ]
+                for sent_i, sent in enumerate(sents)
+            ],
+            dtype=torch.float32
         ).to(DEVICE)
 
         x = self.embd(x)
-        # print("a", x.shape)
-
-        # add fake batch
-        x = x.reshape((1, *x.shape))
-        # print("b", x.shape)
-        # TODO: add batching
         x = self.encoder(x)
-        # select h_n output [1][0], take first in batch [:,0,:]
-        x = x[1][0][:, 0, :]
-        # concatenate forward and backward runs
-        # print("c", x.shape)
-        x = torch.hstack((x[0], x[1]))
+
+        # select h_n output [1][0]
+        x = x[1][0]
+        # bring batch to the first position and "concatenate" the rest
+        x = x.transpose(1, 0).contiguous().view(local_batch_size, -1)
         # apply large dropout on the hidden state
         x = self.final_hidden_dropout(x)
 
-        # print("d", x.shape)
         if self.fusion == 1:
             x = torch.hstack((x, x_extra))
-        # print("e", x.shape)
+
         x = self.regressor(x)
-        # print("f", x.shape)
+
         # multiply final sigmoid output and center
         x = x * self.sigmoid_scale - self.sigmoid_offset
 
@@ -104,18 +108,26 @@ class MEModelRNN(torch.nn.Module):
         self.train(False)
         dev_losses = []
         dev_pred = []
+        batch = []
+
         with torch.no_grad():
             for sample_i, sent in enumerate(tqdm.tqdm(data_dev)):
-                # TODO: add batching
-                score_pred = self.forward(sent)
+                batch.append(sent)
+
+                if len(batch) < self.batch_size:
+                    continue
+
+                score_pred = self.forward(batch)
 
                 score = torch.tensor(
-                    [sent[metric]], requires_grad=False
+                    [[sent[metric]] for sent in batch], requires_grad=False
                 ).to(DEVICE)
                 loss = self.loss_fn(score_pred, score)
 
                 dev_losses.append(loss.detach().cpu().item())
-                dev_pred.append(score_pred.detach().cpu().item())
+                dev_pred += score_pred.reshape(-1).detach().cpu().numpy().tolist()
+
+                batch = []
 
         return dev_losses, dev_pred
 
@@ -125,13 +137,21 @@ class MEModelRNN(torch.nn.Module):
 
             train_losses = []
             train_pred = []
+            batch = []
+
+            # TODO shuffle
 
             for sample_i, sent in enumerate(tqdm.tqdm(data_train)):
-                # TODO: add batching
-                score_pred = self.forward(sent)
+                batch.append(sent)
+
+                if len(batch) < self.batch_size:
+                    continue
+
+                score_pred = self.forward(batch)
 
                 score = torch.tensor(
-                    [sent[metric]], requires_grad=False).to(DEVICE)
+                    [[sent[metric]] for sent in batch], requires_grad=False
+                ).to(DEVICE)
                 loss = self.loss_fn(score_pred, score)
 
                 # backpropagation
@@ -140,12 +160,20 @@ class MEModelRNN(torch.nn.Module):
                 self.optimizer.step()
 
                 train_losses.append(loss.detach().cpu().item())
-                train_pred.append(score_pred.detach().cpu().item())
+                train_pred += score_pred.reshape(-1).detach(
+                ).cpu().numpy().tolist()
+
+                batch = []
 
             # logging dev stuff
-            dev_losses, dev_pred = self.eval_dev(data_dev)
-            data_dev_score = [sent[metric] for sent in data_dev]
-            data_train_score = [sent[metric] for sent in data_train]
+            dev_losses, dev_pred = self.eval_dev(data_dev, metric=metric)
+            # crop to match batch size omittance
+            data_train_score = [
+                sent[metric] for sent in data_train
+            ][:len(train_pred)]
+            data_dev_score = [
+                sent[metric] for sent in data_dev
+            ][:len(dev_pred)]
 
             print(f"Epoch {epoch:0>5}")
             if logger is not None:

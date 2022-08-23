@@ -11,7 +11,7 @@ import me_zoo
 
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
-    args.add_argument("-d", "--data", default="computed/de_en_metric.csv")
+    args.add_argument("-d", "--data", default="computed/de_en_metric_all_fixed.csv")
     args.add_argument("-m", "--model", default="1")
     args.add_argument("-f", "--fusion", type=int, default=None)
     args.add_argument("--metric", default="bleu")
