@@ -63,6 +63,14 @@ def get_model(args):
             sigmoid=True, relu=True,
             num_layers=2, dropout=0.0, final_hidden_dropout=0.75, batch_size=10
         )
+    elif args.model == "1hd75b10lin":
+        from me_model_rnn import MEModelRNN
+        vocab_size = 8192
+        model = MEModelRNN(
+            vocab_size, 512, 128, fusion=args.fusion,
+            sigmoid=False, relu=True,
+            num_layers=2, dropout=0.0, final_hidden_dropout=0.75, batch_size=10
+        )
     elif args.model == "bd":
         from me_model_b_dense import MEModelBaselineDense
         # not used for the model but still needs to be defined

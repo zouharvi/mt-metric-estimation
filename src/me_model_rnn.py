@@ -44,8 +44,10 @@ class MEModelRNN(torch.nn.Module):
 
         # TODO: deeper model
         self.regressor = torch.nn.Sequential(
-            torch.nn.Linear(num_layers * hidden_size *
-                            2 + extra_features, 100),
+            torch.nn.Linear(
+                num_layers * hidden_size * 2 + extra_features,
+                100
+            ),
             torch.nn.Dropout(p=dropout),
             torch.nn.ReLU() if relu else torch.nn.Identity(),
             torch.nn.Linear(100, 1),
@@ -140,7 +142,7 @@ class MEModelRNN(torch.nn.Module):
             train_pred = []
             batch = []
 
-            # random.shuffle(data_train)
+            random.shuffle(data_train)
 
             for sample_i, sent in enumerate(tqdm.tqdm(data_train)):
                 batch.append(sent)

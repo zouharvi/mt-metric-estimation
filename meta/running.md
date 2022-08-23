@@ -1,6 +1,10 @@
 |date|status|nickname|comment|command|
 |-|-|-|-|-|
-|08-22-2022|ok|outroop_19|final hidden state dropout, ??? sents|`python3 ./src/run_me_model.py -l logs/de_en_outroop_17_b.jsonl -f 1 -m 1hd75b10` (local)|
+|08-23-2022|running|outroop_22|final hidden state dropout, 10 batch, linear, no fusion, 500k sents|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/de_en_outroop_22_METRIC.jsonl -f 0 -m 1hd75b10lin --metric METRIC`|
+|08-23-2022|running|outroop_21|final hidden state dropout, 10 batch, no fusion, 500k sents|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/de_en_outroop_21_METRIC.jsonl -f 0 -m 1hd75b10 --metric METRIC`|
+|08-23-2022|running|outroop_20|final hidden state dropout, 10 batch, linear, 500k sents|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/de_en_outroop_20_METRIC.jsonl -f 1 -m 1hd75b10lin --metric METRIC`|
+|08-23-2022|ok|somnorif_3|baseline, 500k sents|`python3 ./src/run_me_model.py -l logs/de_en_somnorif_3_METRIC.jsonl --model b --metric METRIC` (local)|
+|08-23-2022|running|outroop_19|final hidden state dropout, 10 batch, 500k sents|`python3 ./src/run_me_model.py -l logs/de_en_outroop_19_METRIC.jsonl -f 1 -m 1hd75b10 --metric METRIC` (local)|
 |08-22-2022|ok||metrics all, 500k sents|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py`|
 |08-22-2022|ok|somnorif_2c|baseline, 500k sents|`python3 ./src/run_me_model.py -l logs/de_en_somnorif_2.jsonl --model b --metric chrf` (local)|
 |08-22-2022|ok|nephelo_3|baseline, 500k sents|`python3 ./src/run_me_model.py -l logs/de_en_nephelo_3.jsonl --model bdlb10` (local)|
@@ -36,4 +40,4 @@
 |08-20-2022|ok||200k-300k wmt14 sents|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --n-start 200 --n-end 300 -o logs/de_en_3.csv`|
 |08-19-2022|ok (stopped)||100k-400k wmt14 sents|`bsub -W 72:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --n-start 100 --n-end 400 -o logs/de_en_2.csv`|
 |08-19-2022|ok||first 100k wmt14 sents|`python3 ./src/get_translations.py -o logs/de_en.csv` (local)|
-|08-19-2022|ok|outroop_1|no fusion, 40k sents|`python3 ./src/run_me_model.py -l logs/de_en_outroop_1.jsonl` (local)|
+|08-19-2022|ok|outroop_1|no fusion, 40k sents|`python3 ./src/run_me_model.py -l logs/de_en_outroop_1.jsonl` (local)

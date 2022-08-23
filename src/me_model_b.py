@@ -19,7 +19,7 @@ class MEModelBaseline():
         y_train = [sent[metric] for sent in data_train]
         y_dev = [sent[metric] for sent in data_dev]
 
-        model = ElasticNet()
+        model = LinearRegression()
 
         def featurizer(sent):
             len_src = len(sent["src"].split())
@@ -39,7 +39,6 @@ class MEModelBaseline():
             featurizer(sent) for sent in data_dev
         ]
 
-        # possibly decreases performance?
         model.fit(x_train, y_train)
 
         ypred_train = model.predict(x_train)
