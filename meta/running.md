@@ -1,13 +1,13 @@
 |date|status|nickname|comment|command|
 |-|-|-|-|-|
-|08-23-2022|pend||400k-500k wmt14 sents|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de --n-start 400 --n-end 500 -o computed/en_de_4.jsonl`|
-|08-23-2022|pend||300k-400k wmt14 sents|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de --n-start 300 --n-end 400 -o computed/en_de_3.jsonl`|
-|08-23-2022|pend||200k-300k wmt14 sents|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de --n-start 200 --n-end 300 -o computed/en_de_2.jsonl`|
-|08-23-2022|pend||100k-200k wmt14 sents|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de --n-start 100 --n-end 200 -o computed/en_de_1.jsonl`|
-|08-23-2022|pend||000k-100k wmt14 sents|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de --n-start 0 --n-end 100 -o computed/en_de_0.jsonl`|
-|08-23-2022|pending|outroop_22|final hidden state dropout, 10 batch, linear, no fusion, 500k sents|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/de_en_outroop_22_METRIC.jsonl -f 0 -m 1hd75b10lin --metric METRIC`|
-|08-23-2022|pending|outroop_21|final hidden state dropout, 10 batch, no fusion, 500k sents|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/de_en_outroop_21_METRIC.jsonl -f 0 -m 1hd75b10 --metric METRIC`|
-|08-23-2022|pending|outroop_20|final hidden state dropout, 10 batch, linear, 500k sents|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/de_en_outroop_20_METRIC.jsonl -f 1 -m 1hd75b10lin --metric METRIC`|
+|08-23-2022|running||400k-500k wmt14 sents|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de --n-start 400 --n-end 500 -o computed/en_de_4.jsonl`|
+|08-23-2022|running||300k-400k wmt14 sents|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de --n-start 300 --n-end 400 -o computed/en_de_3.jsonl`|
+|08-23-2022|running||200k-300k wmt14 sents|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de --n-start 200 --n-end 300 -o computed/en_de_2.jsonl`|
+|08-23-2022|running||100k-200k wmt14 sents|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de --n-start 100 --n-end 200 -o computed/en_de_1.jsonl`|
+|08-23-2022|running||000k-100k wmt14 sents|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de --n-start 0 --n-end 100 -o computed/en_de_0.jsonl` (remote & local)|
+|08-23-2022|running|outroop_22|final hidden state dropout, 10 batch, linear, no fusion, 500k sents|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/de_en_outroop_22_METRIC.jsonl -f 0 -m 1hd75b10lin --metric METRIC`|
+|08-23-2022|running|outroop_21|final hidden state dropout, 10 batch, no fusion, 500k sents|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/de_en_outroop_21_METRIC.jsonl -f 0 -m 1hd75b10 --metric METRIC`|
+|08-23-2022|running|outroop_20|final hidden state dropout, 10 batch, linear, 500k sents|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/de_en_outroop_20_METRIC.jsonl -f 1 -m 1hd75b10lin --metric METRIC`|
 |08-23-2022|ok|somnorif_3|baseline, 500k sents|`python3 ./src/run_me_model.py -l logs/de_en_somnorif_3_METRIC.jsonl --model b --metric METRIC` (local)|
 |08-23-2022|ok|outroop_19|final hidden state dropout, 10 batch, 500k sents|`python3 ./src/run_me_model.py -l logs/de_en_outroop_19_METRIC.jsonl -f 1 -m 1hd75b10 --metric METRIC` (local)|
 |08-22-2022|ok||metrics all, 500k sents|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py`|

@@ -36,10 +36,10 @@ if __name__ == "__main__":
                 "ref": sent[1],
                 "hyp": sent[2],
                 "conf": float(sent[3]),
-                "bleu": float(sent[4]) / 100,
-                "chrf": float(sent[5]) / 100,
+                "bleu": float(sent[4]),
+                "chrf": float(sent[5]),
                 "ter": float(sent[6]),
-                "meteor": float(sent[7]) / 100,
+                "meteor": float(sent[7]),
                 "comet": float(sent[8]),
             }
             for sent in list(csv.reader(f))[:490000 + 10000]

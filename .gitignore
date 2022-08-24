@@ -3,6 +3,7 @@
 *.dtmp
 computed
 logs
+figures
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

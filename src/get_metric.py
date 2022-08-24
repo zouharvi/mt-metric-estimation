@@ -2,14 +2,15 @@
 
 import argparse
 import sacrebleu
-import csv
 import tqdm
 import evaluate
+import json
+import numpy as np
 
-if __name__== "__main__":
+if __name__ == "__main__":
     args = argparse.ArgumentParser()
-    args.add_argument("-i", "--input", default="computed/de_en.csv")
-    args.add_argument("-o", "--output", default="computed/de_en_metric.csv")
+    args.add_argument("-i", "--input", default="computed/de_en.jsonl")
+    args.add_argument("-o", "--output", default="computed/de_en_metric.jsonl")
     args.add_argument("-t", "--total", type=int, default=None)
     args = args.parse_args()
 
@@ -19,42 +20,76 @@ if __name__== "__main__":
     meteor_metric = evaluate.load('meteor')
     comet_metric = evaluate.load('comet')
 
-    fin = open(args.input, "r")
     fout = open(args.output, "w")
-    fwriter = csv.writer(fout, quoting=csv.QUOTE_ALL)
 
-    data_text = list(csv.reader(fin))
+    with open(args.input, "r") as f:
+        data_text = [json.loads(x) for x in f.readlines()]
 
     print("Computing comet scores")
-    evaluate.enable_progress_bar()
     comet_scores = comet_metric.compute(
-        predictions=[sent[2] for sent in data_text],
-        references=[sent[1] for sent in data_text],
-        sources=[sent[0] for sent in data_text]
+        # use the first hypothesis
+        predictions=[sent["tgts"][0][0] for sent in data_text],
+        references=[sent["ref"] for sent in data_text],
+        sources=[sent["src"] for sent in data_text],
+        progress_bar=True,
     )["scores"]
-    evaluate.disable_progress_bar()
 
     print("Computing main loop")
-    for line_i, (line, comet_score) in enumerate(tqdm.tqdm(zip(data_text, comet_scores), total=args.total)):
-        sent_src = line[0]
-        sent_ref = line[1]
-        sent_tgt = line[2]
-        conf_score = float(line[3])
-        bleu_score = bleu_metric.sentence_score(hypothesis=sent_tgt, references=[sent_ref]).score
-        chrf_score = chrf_metric.sentence_score(hypothesis=sent_tgt, references=[sent_ref]).score
-        # this metric is quite slow
-        ter_score = ter_metric.sentence_score(hypothesis=sent_tgt, references=[sent_ref]).score
-        meteor_score = meteor_metric.compute(predictions=[sent_tgt], references=[sent_ref])["meteor"]
+    for line_i, (sent, comet_score) in enumerate(tqdm.tqdm(zip(data_text, comet_scores), total=len(comet_scores))):
+        # get first hypothesis
+        sent_tgt = sent["tgts"][0][0]
 
-        fwriter.writerow((
-            sent_src, sent_ref, sent_tgt, conf_score,
-            bleu_score, chrf_score, ter_score,
-            meteor_score, comet_score
-        ))
+        # the top one hypothesis is always the one with highest score
+        # best_tgt = sorted(sent["tgts"], key=lambda x: x[1], reverse=True)[0]
+        # assert sent_tgt == best_tgt[0]
+
+        # assign decoder confidence
+        sent["conf"] = sent["tgts"][0][1]
+        sent["conf_exp"] = np.exp(sent["tgts"][0][1])
+        sent["conf_var"] = np.var([x[1] for x in sent["tgts"]])
+        sent["conf_exp_var"] = np.var([np.exp(x[1]) for x in sent["tgts"]])
+        h1_hx_bleu = [
+            bleu_metric.sentence_score(
+                hypothesis=sent_tgt, references=[x[0]]
+            ).score / 100
+            for x in sent["tgts"][1:]
+        ]
+        sent["h1_x_bleu_avg"] = np.average(h1_hx_bleu)
+        sent["h1_x_bleu_var"] = np.var(h1_hx_bleu)
+        hx_hx_bleu = [
+            bleu_metric.sentence_score(
+                hypothesis=x[0], references=[y[0]]
+            ).score / 100
+            for x_i, x in enumerate(sent["tgts"])
+            for y_i, y in enumerate(sent["tgts"])
+            if x_i != y_i
+        ]
+        sent["hx_x_bleu_avg"] = np.average(hx_hx_bleu)
+        sent["hx_x_bleu_var"] = np.var(hx_hx_bleu)
+
+        bleu_score = bleu_metric.sentence_score(
+            hypothesis=sent_tgt, references=[sent["ref"]]
+        ).score / 100
+        chrf_score = chrf_metric.sentence_score(
+            hypothesis=sent_tgt, references=[sent["ref"]]
+        ).score / 100
+        ter_score = ter_metric.sentence_score(
+            hypothesis=sent_tgt, references=[sent["ref"]]
+        ).score
+        meteor_score = meteor_metric.compute(
+            predictions=[sent_tgt], references=[sent["ref"]]
+        )["meteor"]
+
+        sent["metrics"] = {
+            "bleu": bleu_score,
+            "chrf": chrf_score,
+            "ter": ter_score,
+            "meteor": meteor_score,
+            "comet": comet_score,
+        }
+        fout.write(json.dumps(sent, ensure_ascii=False) + "\n")
 
         if line_i % 100 == 0:
             fout.flush()
 
-
-    fin.close()
     fout.close()

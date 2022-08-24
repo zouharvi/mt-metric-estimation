@@ -13,28 +13,31 @@ if __name__ == "__main__":
     args.add_argument(
         "-bl", "--baseline-logfiles", nargs="+",
         default=[
-            "logs/de_en_somnorif_3_bleu.jsonl",
             "logs/de_en_somnorif_3_chrf.jsonl",
-            "logs/de_en_somnorif_3_ter.jsonl",
-            "logs/de_en_somnorif_3_meteor.jsonl",
+            "logs/de_en_somnorif_3_bleu.jsonl",
             "logs/de_en_somnorif_3_comet.jsonl",
-            # TODO add human
+            "logs/de_en_somnorif_3_meteor.jsonl",
+            "logs/de_en_somnorif_3_ter.jsonl",
         ]
     )
     args.add_argument(
         "-mla", "--model-logfiles-all", nargs="+",
         default=[
-            "logs/de_en_outroop_19_bleu.jsonl",  # bleu
-            "logs/de_en_outroop_19_chrf.jsonl",  # bleu
-            "logs/de_en_outroop_19_bleu.jsonl",  # bleu
-            "logs/de_en_outroop_19_meteor.jsonl",  # bleu
-            "logs/de_en_outroop_19_bleu.jsonl",  # bleu
+            "logs/de_en_outroop_19_chrf.jsonl",
+            "logs/de_en_outroop_19_bleu.jsonl",
+            "logs/de_en_outroop_20_comet.jsonl",
+            "logs/de_en_outroop_19_meteor.jsonl",
+            "logs/de_en_outroop_20_ter.jsonl",
         ],
     )
     args.add_argument(
         "-mlt", "--model-logfiles-text", nargs="+",
         default=[
-            "logs/de_en_outroop_19_bleu.jsonl",  # bleu, incorrect
+            "logs/de_en_outroop_21_chrf.jsonl",
+            "logs/de_en_outroop_21_bleu.jsonl",
+            "logs/de_en_outroop_22_comet.jsonl",
+            "logs/de_en_outroop_21_meteor.jsonl",
+            "logs/de_en_outroop_22_ter.jsonl",
         ],
     )
     args = args.parse_args()
@@ -52,6 +55,7 @@ if __name__ == "__main__":
         "conf_exp": "exp(conf.)",
         "conf_raw": "conf.",
         "len_raw": "|s|+|t|",
+        "me_text": "ME text",
         "me_all": "ME all",
     }
     data = defaultdict(list)
@@ -81,7 +85,6 @@ if __name__ == "__main__":
                 [x for x in data_b if x["model"] == "lr_multi"][0]
             )
 
-
     for f, metric in zip(args.model_logfiles_all, METRICS):
         with open(f, "r") as f:
             data_m = [json.loads(line) for line in f.readlines()]
@@ -90,24 +93,39 @@ if __name__ == "__main__":
             )
             data[metric].append({"model": "me_all"} | model_best_epoch)
 
+    for f, metric in zip(args.model_logfiles_text, METRICS):
+        with open(f, "r") as f:
+            data_m = [json.loads(line) for line in f.readlines()]
+            model_best_epoch = max(
+                data_m, key=lambda x: x["dev_corr"]
+            )
+            data[metric].append({"model": "me_text"} | model_best_epoch)
+
     for metric_i, metric in enumerate(METRICS):
         data_local = data[metric]
         plt.bar(
-            [x_i + metric_i / (len(METRICS) + 1)
+            [x_i + metric_i / (len(METRICS) + 1.5)
              for x_i, x in enumerate(data_local)],
             [abs(x["dev_corr"]) for x in data_local],
             tick_label=[
                 ("\n" if x_i % 2 else "") + PRETTY_NAME[x["model"]]
                 for x_i, x in enumerate(data_local)
             ] if metric_i == 2 else None,
-            width=1 / (len(METRICS) + 1),
+            width=1 / (len(METRICS) + 1.5),
             label=PRETTY_NAME[metric],
             edgecolor="black",
             linewidth=1.5,
         )
 
+    plt.vlines(
+        x=4.8, ymin=0, ymax=0.65,
+        linestyle=":", color="black",
+    )
+    plt.ylim(None, 0.65)
+
     plt.legend(
         ncol=3, bbox_to_anchor=(0.5, 1.3), loc="upper center"
     )
     plt.tight_layout(rect=(0, 0, 1, 1.02), pad=0.1)
+    plt.savefig("figures/baseline_comparison.pdf")
     plt.show()

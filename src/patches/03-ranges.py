@@ -1,24 +1,23 @@
 #!/usr/bin/env python3
 
 import argparse
-import csv
+import json
 import tqdm
+from collections import defaultdict
 
 if __name__== "__main__":
     args = argparse.ArgumentParser()
-    args.add_argument("-i", "--input", default="computed/de_en_metric_all_fixed.csv")
+    args.add_argument("-i", "--input", default="computed/en_de_metric.jsonl")
     args = args.parse_args()
 
+    with open(args.input, "r") as f:
+        data = [json.loads(x) for x in f.readlines()]
 
-    fin = open(args.input, "r")
-    data_text = list(csv.reader(fin))
-    fin.close()
+    values = defaultdict(list)
 
-    values = [[] for _ in range(6)]
+    for line_i, line in enumerate(tqdm.tqdm(data)):
+        for m_k, m_v in line["metrics"].items():
+            values[m_k].append(m_v)
 
-    for line_i, line in enumerate(tqdm.tqdm(data_text)):
-        for f_i in range(3, 8+1):
-            values[f_i-3].append(float(line[f_i]))
-
-    for f_i in range(3, 8+1):
-        print(f"{f_i}: ({min(values[f_i-3])}, {max(values[f_i-3])})")
+    for m_k, m_v in values.items():
+        print(f"{m_k}: ({min(m_v)}, {max(m_v)})")
