@@ -43,21 +43,7 @@ if __name__ == "__main__":
     args = args.parse_args()
 
     METRICS = ["bleu", "chrf", "ter", "meteor", "comet"]
-    PRETTY_NAME = {
-        "bleu": "BLEU",
-        "chrf": "ChrF",
-        "ter": "TER",
-        "meteor": "METEOR",
-        "comet": "COMET",
 
-        "tfidf": "LR TF-IDF",
-        "lr_multi": "LR Multi",
-        "conf_exp": "exp(conf.)",
-        "conf_raw": "conf.",
-        "len_raw": "|s|+|t|",
-        "me_text": "ME text",
-        "me_all": "ME all",
-    }
     data = defaultdict(list)
 
     plt.figure(figsize=(5, 3))
@@ -65,15 +51,16 @@ if __name__ == "__main__":
     for f, metric in zip(args.baseline_logfiles, METRICS):
         with open(f, "r") as f:
             data_b = [json.loads(line) for line in f.readlines()]
-            data[metric].append(
-                [x for x in data_b if x["model"] == "len_raw"][0]
-            )
-            data[metric].append(
-                [x for x in data_b if x["model"] == "conf_raw"][0]
-            )
-            data[metric].append(
-                [x for x in data_b if x["model"] == "conf_exp"][0]
-            )
+            # individual features are going to be in a different figures
+            # data[metric].append(
+            #     [x for x in data_b if x["model"] == "len_raw"][0]
+            # )
+            # data[metric].append(
+            #     [x for x in data_b if x["model"] == "conf_raw"][0]
+            # )
+            # data[metric].append(
+            #     [x for x in data_b if x["model"] == "conf_exp"][0]
+            # )
             data_tfidf = [
                 x for x in data_b if x["model"].startswith("tfidf_lr_")]
             model_best_tfidf = max(
@@ -108,11 +95,11 @@ if __name__ == "__main__":
              for x_i, x in enumerate(data_local)],
             [abs(x["dev_corr"]) for x in data_local],
             tick_label=[
-                ("\n" if x_i % 2 else "") + PRETTY_NAME[x["model"]]
+                ("\n" if x_i % 2 else "") + fig_utils.PRETTY_NAME[x["model"]]
                 for x_i, x in enumerate(data_local)
             ] if metric_i == 2 else None,
             width=1 / (len(METRICS) + 1.5),
-            label=PRETTY_NAME[metric],
+            label=fig_utils.PRETTY_NAME[metric],
             edgecolor="black",
             linewidth=1.5,
         )

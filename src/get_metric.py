@@ -25,6 +25,7 @@ if __name__ == "__main__":
     with open(args.input, "r") as f:
         data_text = [json.loads(x) for x in f.readlines()]
 
+    # the progress bar here is incorrect but maybe it just shows batches instead of sentences?
     print("Computing comet scores")
     comet_scores = comet_metric.compute(
         # use the first hypothesis
@@ -54,8 +55,8 @@ if __name__ == "__main__":
             ).score / 100
             for x in sent["tgts"][1:]
         ]
-        sent["h1_x_bleu_avg"] = np.average(h1_hx_bleu)
-        sent["h1_x_bleu_var"] = np.var(h1_hx_bleu)
+        sent["h1_hx_bleu_avg"] = np.average(h1_hx_bleu)
+        sent["h1_hx_bleu_var"] = np.var(h1_hx_bleu)
         hx_hx_bleu = [
             bleu_metric.sentence_score(
                 hypothesis=x[0], references=[y[0]]
@@ -64,8 +65,8 @@ if __name__ == "__main__":
             for y_i, y in enumerate(sent["tgts"])
             if x_i != y_i
         ]
-        sent["hx_x_bleu_avg"] = np.average(hx_hx_bleu)
-        sent["hx_x_bleu_var"] = np.var(hx_hx_bleu)
+        sent["hx_hx_bleu_avg"] = np.average(hx_hx_bleu)
+        sent["hx_hx_bleu_var"] = np.var(hx_hx_bleu)
 
         bleu_score = bleu_metric.sentence_score(
             hypothesis=sent_tgt, references=[sent["ref"]]
