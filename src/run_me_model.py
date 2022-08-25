@@ -11,9 +11,11 @@ import me_zoo
 
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
-    args.add_argument("-d", "--data", default="computed/de_en_metric.jsonl")
+    args.add_argument("-dt", "--data-train", default="computed/en_de_human_metric_train.jsonl")
+    args.add_argument("-dd", "--data-dev", default=None)
     args.add_argument("-m", "--model", default="1")
     args.add_argument("-f", "--fusion", type=int, default=None)
+    args.add_argument("-dn", "--dev-n", type=int, default=None)
     args.add_argument("--metric", default="bleu")
     args.add_argument(
         "-l", "--logfile",
@@ -27,16 +29,27 @@ if __name__ == "__main__":
         print("Logfile already exists, refusing to continue")
         exit()
 
-    with open(args.data, "r") as f:
-        data = [json.loads(x) for x in f.readlines()][:490000 + 10000]
-        # (src, ref, hyp, conf, bleu)
-        data = [
-            sent | {
-                "src+hyp": sent["src"] + " [SEP] " + sent["tgts"][0][0],
-                "hyp": sent["tgts"][0][0],
-            }
-            for sent in data
-        ]
+    with open(args.data_train, "r") as f:
+        data_train = [json.loads(x) for x in f.readlines()]
+        data = data_train
+    if args.data_dev is not None:
+        with open(args.data_dev, "r") as f:
+            data_dev = [json.loads(x) for x in f.readlines()]
+        # data_dev is first
+        data = data_dev + data_train
+        args.dev_n = len(data_dev)
+    else:
+        if args.dev_n is None:
+            print("Unkown dev size specified")
+        
+    # (src, ref, hyp, conf, bleu)
+    data = [
+        sent | {
+            "src+hyp": sent["src"] + " [SEP] " + sent["tgts"][0][0],
+            "hyp": sent["tgts"][0][0],
+        }
+        for sent in data
+    ]
 
     encoder = utils.BPEEncoder(vocab_size)
     encoder.fit([x["src+hyp"] for x in data])
@@ -46,8 +59,8 @@ if __name__ == "__main__":
         for sent, sent_bpe in zip(data, data_bpe)
     ]
     # the first 10k is test
-    data_train = data[10000:]
-    data_dev = data[:10000]
+    data_train = data[args.dev_n:]
+    data_dev = data[:args.dev_n]
 
     # define logging function wrapper
     def log_step(data):

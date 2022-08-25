@@ -10,8 +10,9 @@ DEVICE = utils.get_device()
 
 class MEModelComet():
     def __init__(self):
-        # TODO: try wmt21-comet-qe-da
-        self.comet_metric = evaluate.load("comet", config_name='wmt21-comet-qe-da')
+        # wmt21-comet-qe-mqm works better than wmt21-comet-qe-da
+        self.model_name = "wmt21-comet-qe-mqm"
+        self.comet_metric = evaluate.load("comet", config_name=self.model_name)
 
     def train_epochs(self, data_train, data_dev, metric, logger=None):
         data_dev_pred = self.comet_metric.compute(
@@ -20,6 +21,10 @@ class MEModelComet():
             references=["" for sent in data_dev],
             progress_bar=True,
         )["scores"]
-        data_dev_y = [sent["metrics"][metric] for sent in data_dev]
-        corr = np.corrcoef(data_dev_y, data_dev_pred)[0,1]
-        print(f"Corrcoef: {corr:.10f}")
+
+        METRICS = list(data_dev[0]["metrics"].keys())
+        for metric in METRICS:
+            data_dev_y = [sent["metrics"][metric] for sent in data_dev]
+            corr = np.corrcoef(data_dev_y, data_dev_pred)[0,1]
+            print(f"{metric:>10}-comet: {corr:.3f}")
+            logger({"model": self.model_name, "metric": metric, "dev_corr": corr})

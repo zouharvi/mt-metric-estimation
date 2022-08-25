@@ -1,5 +1,6 @@
 |date|status|nickname|comment|command|
 |-|-|-|-|-|
+|08-23-2022|ok|somnorif_4|baseline|`python3 ./src/run_me_model.py -l logs/en_de_somnorif_4_METRIC.jsonl --model b --metric METRIC` (local)|
 |08-25-2022|ok|outroop_22||`python3 ./src/run_me_model.py -l logs/en_de_hopsack_METRIC.jsonl -m comet --metric METRIC`|
 |08-25-2022|ok||metrics part|`bsub -W 12:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_4.jsonl -o computed/en_de_4_metric.jsonl`|
 |08-25-2022|ok||metrics part|`bsub -W 12:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_3.jsonl -o computed/en_de_3_metric.jsonl`|
