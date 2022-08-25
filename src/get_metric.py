@@ -24,6 +24,13 @@ if __name__ == "__main__":
 
     with open(args.input, "r") as f:
         data_text = [json.loads(x) for x in f.readlines()]
+    
+
+    if "score" in data_text[0]:
+        human_file = True
+        print("Detected human scores file")
+    else:
+        human_file = False
 
     # the progress bar here is incorrect but maybe it just shows batches instead of sentences?
     print("Computing comet scores")
@@ -47,26 +54,29 @@ if __name__ == "__main__":
         # assign decoder confidence
         sent["conf"] = sent["tgts"][0][1]
         sent["conf_exp"] = np.exp(sent["tgts"][0][1])
-        sent["conf_var"] = np.var([x[1] for x in sent["tgts"]])
-        sent["conf_exp_var"] = np.var([np.exp(x[1]) for x in sent["tgts"]])
-        h1_hx_bleu = [
-            bleu_metric.sentence_score(
-                hypothesis=sent_tgt, references=[x[0]]
-            ).score / 100
-            for x in sent["tgts"][1:]
-        ]
-        sent["h1_hx_bleu_avg"] = np.average(h1_hx_bleu)
-        sent["h1_hx_bleu_var"] = np.var(h1_hx_bleu)
-        hx_hx_bleu = [
-            bleu_metric.sentence_score(
-                hypothesis=x[0], references=[y[0]]
-            ).score / 100
-            for x_i, x in enumerate(sent["tgts"])
-            for y_i, y in enumerate(sent["tgts"])
-            if x_i != y_i
-        ]
-        sent["hx_hx_bleu_avg"] = np.average(hx_hx_bleu)
-        sent["hx_hx_bleu_var"] = np.var(hx_hx_bleu)
+
+        if not human_file:
+            sent["conf_var"] = np.var([x[1] for x in sent["tgts"]])
+            sent["conf_exp_var"] = np.var([np.exp(x[1]) for x in sent["tgts"]])
+            h1_hx_bleu = [
+                bleu_metric.sentence_score(
+                    hypothesis=sent_tgt, references=[x[0]]
+                ).score / 100
+                for x in sent["tgts"][1:]
+            ]
+            sent["h1_hx_bleu_avg"] = np.average(h1_hx_bleu)
+            sent["h1_hx_bleu_var"] = np.var(h1_hx_bleu)
+            hx_hx_bleu = [
+                bleu_metric.sentence_score(
+                    hypothesis=x[0], references=[y[0]]
+                ).score / 100
+                for x_i, x in enumerate(sent["tgts"])
+                for y_i, y in enumerate(sent["tgts"])
+                if x_i != y_i
+            ]
+            sent["hx_hx_bleu_avg"] = np.average(hx_hx_bleu)
+            sent["hx_hx_bleu_var"] = np.var(hx_hx_bleu)
+
 
         bleu_score = bleu_metric.sentence_score(
             hypothesis=sent_tgt, references=[sent["ref"]]
@@ -88,6 +98,11 @@ if __name__ == "__main__":
             "meteor": meteor_score,
             "comet": comet_score,
         }
+
+        if human_file:
+            sent["metrics"]["score"] = sent.pop("score")
+            sent["metrics"]["zscore"] = sent.pop("zscore")
+            
         fout.write(json.dumps(sent, ensure_ascii=False) + "\n")
 
         if line_i % 100 == 0:

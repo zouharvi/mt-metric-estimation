@@ -96,6 +96,11 @@ def get_model(args):
         # not used for the model but still needs to be defined
         vocab_size = 8192
         model = MEModelBaseline()
+    elif args.model == "comet":
+        from me_model_comet import MEModelComet
+        # not used for the model but still needs to be defined
+        vocab_size = 8192
+        model = MEModelComet()
     else:
         raise Exception("Unknown model")
 

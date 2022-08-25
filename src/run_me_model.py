@@ -11,7 +11,7 @@ import me_zoo
 
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
-    args.add_argument("-d", "--data", default="computed/de_en_metric_all_fixed.csv")
+    args.add_argument("-d", "--data", default="computed/de_en_metric.jsonl")
     args.add_argument("-m", "--model", default="1")
     args.add_argument("-f", "--fusion", type=int, default=None)
     args.add_argument("--metric", default="bleu")
@@ -28,21 +28,14 @@ if __name__ == "__main__":
         exit()
 
     with open(args.data, "r") as f:
+        data = [json.loads(x) for x in f.readlines()][:490000 + 10000]
         # (src, ref, hyp, conf, bleu)
         data = [
-            {
-                "src+hyp": sent[0] + " [SEP] " + sent[2],
-                "src": sent[0],
-                "ref": sent[1],
-                "hyp": sent[2],
-                "conf": float(sent[3]),
-                "bleu": float(sent[4]),
-                "chrf": float(sent[5]),
-                "ter": float(sent[6]),
-                "meteor": float(sent[7]),
-                "comet": float(sent[8]),
+            sent | {
+                "src+hyp": sent["src"] + " [SEP] " + sent["tgts"][0][0],
+                "hyp": sent["tgts"][0][0],
             }
-            for sent in list(csv.reader(f))[:490000 + 10000]
+            for sent in data
         ]
 
     encoder = utils.BPEEncoder(vocab_size)
