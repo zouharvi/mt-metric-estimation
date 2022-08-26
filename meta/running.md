@@ -1,12 +1,23 @@
+python3 ./src/run_me_model.py -l logs/en_de_somnorif_4_bleu.jsonl --model b --metric bleu --dev-n 1000;
+python3 ./src/run_me_model.py -l logs/en_de_somnorif_4_ter.jsonl --model b --metric ter --dev-n 1000;
+python3 ./src/run_me_model.py -l logs/en_de_somnorif_4_chrf.jsonl --model b --metric chrf --dev-n 1000;
+python3 ./src/run_me_model.py -l logs/en_de_somnorif_4_meteor.jsonl --model b --metric meteor --dev-n 1000;
+python3 ./src/run_me_model.py -l logs/en_de_somnorif_4_comet.jsonl --model b --metric comet --dev-n 1000;
+python3 ./src/run_me_model.py -l logs/en_de_somnorif_4_zscore.jsonl --model b --metric zscore --dev-n 1000;
+
 |date|status|nickname|comment|command|
 |-|-|-|-|-|
-|08-23-2022|ok|somnorif_4|baseline|`python3 ./src/run_me_model.py -l logs/en_de_somnorif_4_METRIC.jsonl --model b --metric METRIC` (local)|
-|08-25-2022|ok|outroop_22||`python3 ./src/run_me_model.py -l logs/en_de_hopsack_METRIC.jsonl -m comet --metric METRIC`|
+|08-26-2022|running|outroop_23|x -> x (non zscore)|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/de_en_outroop_23_bleu_bleu.jsonl -f 1 -m 1hd75b10lin --metric bleu --metric-dev bleu -dt computed/en_de_metric.jsonl --dev-n 10000`|
+|08-26-2022|ok|outroop_23|bleu,comet,zscore -> zscore|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/de_en_outroop_23_comet_zscore.jsonl -f 1 -m 1hd75b10lin --metric comet --metric-dev zscore -dt computed/en_de_human_metric_train.jsonl --dev-n 1000`|
+|08-26-2022|ok|hopsack_0||`python3 ./src/run_me_model.py -l logs/en_de_hopsack_hopsack_0.jsonl -m comet`|
+|08-26-2022|ok|somnorif_4|baseline|`python3 ./src/run_me_model.py -l logs/en_de_somnorif_4_METRIC.jsonl --model b --metric METRIC --dev-n 1000` (local)|
+|08-25-2022|ok|hopsack_0||`python3 ./src/run_me_model.py -l logs/en_de_hopsack_hopsack_0.jsonl -m comet --metric METRIC`|
 |08-25-2022|ok||metrics part|`bsub -W 12:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_4.jsonl -o computed/en_de_4_metric.jsonl`|
 |08-25-2022|ok||metrics part|`bsub -W 12:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_3.jsonl -o computed/en_de_3_metric.jsonl`|
 |08-25-2022|ok||metrics part|`bsub -W 12:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_2.jsonl -o computed/en_de_2_metric.jsonl`|
 |08-25-2022|ok||metrics part|`bsub -W 12:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_1.jsonl -o computed/en_de_1_metric.jsonl`|
 |08-25-2022|ok||metrics part|`bsub -W 12:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_0.jsonl -o computed/en_de_0_metric.jsonl`|
+|08-23-2022|ok|somnorif_4|baseline|`python3 ./src/run_me_model.py -l logs/en_de_somnorif_4_METRIC.jsonl --model b --metric METRIC` (local)|
 |08-23-2022|ok||400k-500k wmt14 sents|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de --n-start 400 --n-end 500 -o computed/en_de_4.jsonl`|
 |08-23-2022|ok||300k-400k wmt14 sents|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de --n-start 300 --n-end 400 -o computed/en_de_3.jsonl`|
 |08-23-2022|ok||200k-300k wmt14 sents|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de --n-start 200 --n-end 300 -o computed/en_de_2.jsonl`|

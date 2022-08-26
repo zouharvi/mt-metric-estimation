@@ -23,16 +23,29 @@ if __name__ == "__main__":
         ]
     )
     args.add_argument(
-        "-mla", "--model-logfiles-all", nargs="+",
-        # TODO: change to en-de
+        "-mlad", "--model-logfiles-all-target", nargs="+",
+        # TODO: currently just human features
         default=[
-            "logs/de_en_outroop_19_chrf.jsonl",
-            "logs/de_en_outroop_19_bleu.jsonl",
-            "logs/de_en_outroop_20_comet.jsonl",
-            "logs/de_en_outroop_19_meteor.jsonl",
-            "logs/de_en_outroop_20_ter.jsonl",
+            "logs/de_en_outroop_23_chrf_chrf.jsonl",
+            "logs/de_en_outroop_23_bleu_bleu.jsonl",
+            "logs/de_en_outroop_23_comet_comet.jsonl",
+            "logs/de_en_outroop_23_meteor_meteor.jsonl",
+            "logs/de_en_outroop_23_ter_ter.jsonl",
+            "logs/de_en_outroop_23_zscore_zscore.jsonl",
         ],
     )
+    # args.add_argument(
+    #     "-mltd", "--model-logfiles-text-target", nargs="+",
+    #     # TODO: currently just human features
+    #     default=[
+    #         "logs/de_en_outroop_23_chrf_chrf.jsonl",
+    #         "logs/de_en_outroop_23_bleu_bleu.jsonl",
+    #         "logs/de_en_outroop_23_comet_comet.jsonl",
+    #         "logs/de_en_outroop_23_meteor_meteor.jsonl",
+    #         "logs/de_en_outroop_23_ter_ter.jsonl",
+    #         "logs/de_en_outroop_23_zscore_zscore.jsonl",
+    #     ],
+    # )
     args.add_argument(
         "-mlt", "--model-logfiles-text", nargs="+",
         # TODO: change to en-de
@@ -85,13 +98,13 @@ if __name__ == "__main__":
                 [x for x in data_b if x["model"] == "lr_multi"][0]
             )
 
-    for f, metric in zip(args.model_logfiles_all, METRICS):
+    for f, metric in zip(args.model_logfiles_all_target, METRICS):
         with open(f, "r") as f:
             data_m = [json.loads(line) for line in f.readlines()]
             model_best_epoch = max(
                 data_m, key=lambda x: x["dev_corr"]
             )
-            data[metric].append({"model": "me_all"} | model_best_epoch)
+            data[metric].append({"model": "me_all_target"} | model_best_epoch)
 
     for f, metric in zip(args.model_logfiles_text, METRICS):
         with open(f, "r") as f:

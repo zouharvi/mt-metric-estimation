@@ -53,6 +53,7 @@ PRETTY_NAME = {
     "lr_multi": "LR Multi",
     "me_text": "ME text",
     "me_all": "ME all",
+    "me_all_target": "ME all target",
 
     "wmt21-comet-qe-mqm": "COMET-QE",
     "zscore": "z-score",

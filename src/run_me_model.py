@@ -17,6 +17,7 @@ if __name__ == "__main__":
     args.add_argument("-f", "--fusion", type=int, default=None)
     args.add_argument("-dn", "--dev-n", type=int, default=None)
     args.add_argument("--metric", default="bleu")
+    args.add_argument("--metric-dev", default="zscore")
     args.add_argument(
         "-l", "--logfile",
         default="logs/de_en_outroop.jsonl"
@@ -35,12 +36,24 @@ if __name__ == "__main__":
     if args.data_dev is not None:
         with open(args.data_dev, "r") as f:
             data_dev = [json.loads(x) for x in f.readlines()]
+
+        if args.dev_n is not None:
+            data_dev = data_dev[:args.dev_n]
+
+        if "human" in args.data_dev and args.dev_n != 1000:
+            print("You're using the human data but your dev-n is not 1k as described in the paper")
+            exit()
+            
         # data_dev is first
         data = data_dev + data_train
         args.dev_n = len(data_dev)
     else:
+        if "human" in args.data_train and args.dev_n != 1000:
+            print("You're using the human data but your dev-n is not 1k as described in the paper")
+            exit()
         if args.dev_n is None:
             print("Unkown dev size specified")
+            exit()
         
     # (src, ref, hyp, conf, bleu)
     data = [
@@ -70,4 +83,4 @@ if __name__ == "__main__":
         # flushes at the end
 
     print(f"Training model {args.model} with fusion {args.fusion}")
-    model.train_epochs(data_train, data_dev, metric=args.metric, logger=log_step)
+    model.train_epochs(data_train, data_dev, metric=args.metric, metric_dev=args.metric_dev, logger=log_step)

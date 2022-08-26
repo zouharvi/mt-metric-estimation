@@ -22,6 +22,8 @@ class MEModelComet():
             progress_bar=True,
         )["scores"]
 
+        print("Disregarding input metric and running against all")
+
         METRICS = list(data_dev[0]["metrics"].keys())
         for metric in METRICS:
             data_dev_y = [sent["metrics"][metric] for sent in data_dev]

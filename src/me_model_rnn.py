@@ -123,7 +123,7 @@ class MEModelRNN(torch.nn.Module):
                 score_pred = self.forward(batch)
 
                 score = torch.tensor(
-                    [[sent[metric]] for sent in batch], requires_grad=False
+                    [[sent["metrics"][metric]] for sent in batch], requires_grad=False
                 ).to(DEVICE)
                 loss = self.loss_fn(score_pred, score)
 
@@ -134,7 +134,10 @@ class MEModelRNN(torch.nn.Module):
 
         return dev_losses, dev_pred
 
-    def train_epochs(self, data_train, data_dev, metric="bleu", epochs=10, logger=None):
+    def train_epochs(self, data_train, data_dev, metric="bleu", metric_dev=None, epochs=10, logger=None):
+        if metric_dev == None:
+            metric_dev = metric
+
         for epoch in range(1, epochs + 1):
             self.train(True)
 
@@ -153,7 +156,7 @@ class MEModelRNN(torch.nn.Module):
                 score_pred = self.forward(batch)
 
                 score = torch.tensor(
-                    [[sent[metric]] for sent in batch], requires_grad=False
+                    [[sent["metrics"][metric]] for sent in batch], requires_grad=False
                 ).to(DEVICE)
                 loss = self.loss_fn(score_pred, score)
 
@@ -169,13 +172,13 @@ class MEModelRNN(torch.nn.Module):
                 batch = []
 
             # logging dev stuff
-            dev_losses, dev_pred = self.eval_dev(data_dev, metric=metric)
+            dev_losses, dev_pred = self.eval_dev(data_dev, metric=metric_dev)
             # crop to match batch size omittance
             data_train_score = [
-                sent[metric] for sent in data_train
+                sent["metrics"][metric] for sent in data_train
             ][:len(train_pred)]
             data_dev_score = [
-                sent[metric] for sent in data_dev
+                sent["metrics"][metric_dev] for sent in data_dev
             ][:len(dev_pred)]
 
             print(f"Epoch {epoch:0>5}")
