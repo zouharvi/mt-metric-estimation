@@ -15,9 +15,9 @@ class MEModelBaseline():
     def __init__(self):
         pass
 
-    def train_epochs(self, data_train, data_dev, metric="bleu", logger=None):
+    def train_epochs(self, data_train, data_dev, metric="bleu", metric_dev=None, logger=None):
         y_train = [sent["metrics"][metric] for sent in data_train]
-        y_dev = [sent["metrics"][metric] for sent in data_dev]
+        y_dev = [sent["metrics"][metric_dev] for sent in data_dev]
 
         model = LinearRegression()
 

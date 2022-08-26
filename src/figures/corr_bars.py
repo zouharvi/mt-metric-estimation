@@ -23,42 +23,37 @@ if __name__ == "__main__":
         ]
     )
     args.add_argument(
-        "-mlad", "--model-logfiles-all-target", nargs="+",
+        "-mlad", "--model-logfiles-all", nargs="+",
         # TODO: currently just human features
+        # results are en-de, the filenames are wrong
         default=[
-            "logs/de_en_outroop_23_chrf_chrf.jsonl",
-            "logs/de_en_outroop_23_bleu_bleu.jsonl",
-            "logs/de_en_outroop_23_comet_comet.jsonl",
-            "logs/de_en_outroop_23_meteor_meteor.jsonl",
-            "logs/de_en_outroop_23_ter_ter.jsonl",
+            # 10k
+            "logs/de_en_outroop_20_chrf.jsonl",
+            "logs/de_en_outroop_20_bleu.jsonl",
+            "logs/de_en_outroop_20_comet.jsonl",
+            "logs/de_en_outroop_20_meteor.jsonl",
+            "logs/de_en_outroop_20_ter.jsonl",
+            # 1k
             "logs/de_en_outroop_23_zscore_zscore.jsonl",
         ],
     )
-    # args.add_argument(
-    #     "-mltd", "--model-logfiles-text-target", nargs="+",
-    #     # TODO: currently just human features
-    #     default=[
-    #         "logs/de_en_outroop_23_chrf_chrf.jsonl",
-    #         "logs/de_en_outroop_23_bleu_bleu.jsonl",
-    #         "logs/de_en_outroop_23_comet_comet.jsonl",
-    #         "logs/de_en_outroop_23_meteor_meteor.jsonl",
-    #         "logs/de_en_outroop_23_ter_ter.jsonl",
-    #         "logs/de_en_outroop_23_zscore_zscore.jsonl",
-    #     ],
-    # )
     args.add_argument(
         "-mlt", "--model-logfiles-text", nargs="+",
-        # TODO: change to en-de
+        # TODO: change to text-only
+        # results are en-de, the filenames are wrong
         default=[
-            "logs/de_en_outroop_21_chrf.jsonl",
-            "logs/de_en_outroop_21_bleu.jsonl",
+            # 10k
+            "logs/de_en_outroop_22_chrf.jsonl",
+            "logs/de_en_outroop_22_bleu.jsonl",
             "logs/de_en_outroop_22_comet.jsonl",
-            "logs/de_en_outroop_21_meteor.jsonl",
+            "logs/de_en_outroop_22_meteor.jsonl",
             "logs/de_en_outroop_22_ter.jsonl",
+            # 1k
+            "logs/en_de_outroop_24_zscore_zscore.jsonl",
         ],
     )
     args.add_argument(
-        "-cl", "--comet-logfile", default="logs/en_de_hopsack_0.jsonl",
+        "-cl", "--comet-logfile", default="logs/en_de_hopsack_0_edited.jsonl",
     )
     args = args.parse_args()
 
@@ -66,7 +61,7 @@ if __name__ == "__main__":
 
     data = defaultdict(list)
 
-    plt.figure(figsize=(5, 3))
+    plt.figure(figsize=(5, 2.7))
 
     # possible future bug: this only works because comet-qe is at the beginning
     with open(args.comet_logfile, "r") as f:
@@ -98,13 +93,13 @@ if __name__ == "__main__":
                 [x for x in data_b if x["model"] == "lr_multi"][0]
             )
 
-    for f, metric in zip(args.model_logfiles_all_target, METRICS):
+    for f, metric in zip(args.model_logfiles_all, METRICS):
         with open(f, "r") as f:
             data_m = [json.loads(line) for line in f.readlines()]
             model_best_epoch = max(
                 data_m, key=lambda x: x["dev_corr"]
             )
-            data[metric].append({"model": "me_all_target"} | model_best_epoch)
+            data[metric].append({"model": "me_all"} | model_best_epoch)
 
     for f, metric in zip(args.model_logfiles_text, METRICS):
         with open(f, "r") as f:
@@ -122,7 +117,8 @@ if __name__ == "__main__":
              for x_i, x in enumerate(data_local)],
             [abs(x["dev_corr"]) for x in data_local],
             tick_label=[
-                ("\n" if x_i % 2 else "") + fig_utils.PRETTY_NAME[x["model"]]
+                # ("\n" if x_i % 2 else "") + 
+                fig_utils.PRETTY_NAME[x["model"]]
                 for x_i, x in enumerate(data_local)
             ] if metric_i == 2 else None,
             width=1 / (len(METRICS) + 1.5),
@@ -132,7 +128,7 @@ if __name__ == "__main__":
         )
 
     plt.vlines(
-        x=4.8, ymin=0, ymax=0.65,
+        x= [0.835, 2.835], ymin=0, ymax=0.65,
         linestyle=":", color="black",
     )
     plt.ylim(None, 0.65)

@@ -14,7 +14,7 @@ class MEModelComet():
         self.model_name = "wmt21-comet-qe-mqm"
         self.comet_metric = evaluate.load("comet", config_name=self.model_name)
 
-    def train_epochs(self, data_train, data_dev, metric, logger=None):
+    def train_epochs(self, data_train, data_dev, metric, metric_dev=None, logger=None):
         data_dev_pred = self.comet_metric.compute(
             predictions=[sent["hyp"] for sent in data_dev],
             sources=[sent["src"] for sent in data_dev],
@@ -22,7 +22,7 @@ class MEModelComet():
             progress_bar=True,
         )["scores"]
 
-        print("Disregarding input metric and running against all")
+        print("Disregarding main & dev metric and running against all")
 
         METRICS = list(data_dev[0]["metrics"].keys())
         for metric in METRICS:

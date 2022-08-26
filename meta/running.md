@@ -1,15 +1,14 @@
-python3 ./src/run_me_model.py -l logs/en_de_somnorif_4_bleu.jsonl --model b --metric bleu --dev-n 1000;
-python3 ./src/run_me_model.py -l logs/en_de_somnorif_4_ter.jsonl --model b --metric ter --dev-n 1000;
-python3 ./src/run_me_model.py -l logs/en_de_somnorif_4_chrf.jsonl --model b --metric chrf --dev-n 1000;
-python3 ./src/run_me_model.py -l logs/en_de_somnorif_4_meteor.jsonl --model b --metric meteor --dev-n 1000;
-python3 ./src/run_me_model.py -l logs/en_de_somnorif_4_comet.jsonl --model b --metric comet --dev-n 1000;
-python3 ./src/run_me_model.py -l logs/en_de_somnorif_4_zscore.jsonl --model b --metric zscore --dev-n 1000;
-
 |date|status|nickname|comment|command|
 |-|-|-|-|-|
-|08-26-2022|running|outroop_23|x -> x (non zscore)|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/de_en_outroop_23_bleu_bleu.jsonl -f 1 -m 1hd75b10lin --metric bleu --metric-dev bleu -dt computed/en_de_metric.jsonl --dev-n 10000`|
-|08-26-2022|ok|outroop_23|bleu,comet,zscore -> zscore|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/de_en_outroop_23_comet_zscore.jsonl -f 1 -m 1hd75b10lin --metric comet --metric-dev zscore -dt computed/en_de_human_metric_train.jsonl --dev-n 1000`|
-|08-26-2022|ok|hopsack_0||`python3 ./src/run_me_model.py -l logs/en_de_hopsack_hopsack_0.jsonl -m comet`|
+|08-26-2022|running||metrics h2|`bsub -W 24:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_h2.jsonl -o computed/en_de_h2_metric.jsonl`|
+|08-26-2022|running||metrics h5|`bsub -W 24:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_h5.jsonl -o computed/en_de_h5_metric.jsonl`|
+|08-26-2022|ok|dwile_1|bleu limited data|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_dwile_0_1k.jsonl -m b --metric bleu --metric-dev bleu -dt computed/en_de_metric.jsonl --dev-n 10000 --train-n 1000`|
+|08-26-2022|running|dwile_0|bleu limited data|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_dwile_0_1k.jsonl -f 1 -m 1hd75b10lin --metric bleu --metric-dev bleu -dt computed/en_de_metric.jsonl --dev-n 10000 --train-n 1000`|
+|08-26-2022|running|outroop_24|x -> x (zscore 1k, others 10k)|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/de_en_outroop_23_bleu_bleu.jsonl -f 0 -m 1hd75b10lin --metric bleu --metric-dev bleu -dt computed/en_de_metric.jsonl --dev-n 10000`|
+|08-26-2022|ok|hopsack_0 qe data||`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_hopsack_0.jsonl -m comet -dt computed/en_de_human_metric.jsonl --dev-n 1000`|
+|08-26-2022|ok|hopsack_1 me data||`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_hopsack_1.jsonl -m comet -dt computed/en_de_metric.jsonl --dev-n 10000`|
+|08-26-2022|ok (accidentially on 1k human?)|outroop_23|x -> x (non zscore)|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/de_en_outroop_23_bleu_bleu.jsonl -f 1 -m 1hd75b10lin --metric bleu --metric-dev bleu -dt computed/en_de_metric.jsonl --dev-n 10000`|
+|08-26-2022|ok|outroop_23|bleu,comet,zscore -> zscore|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/de_en_outroop_23_comet_zscore.jsonl -f 1 -m 1hd75b10lin --metric comet --metric-dev zscore -dt computed/en_de_human_metric.jsonl --dev-n 1000`|
 |08-26-2022|ok|somnorif_4|baseline|`python3 ./src/run_me_model.py -l logs/en_de_somnorif_4_METRIC.jsonl --model b --metric METRIC --dev-n 1000` (local)|
 |08-25-2022|ok|hopsack_0||`python3 ./src/run_me_model.py -l logs/en_de_hopsack_hopsack_0.jsonl -m comet --metric METRIC`|
 |08-25-2022|ok||metrics part|`bsub -W 12:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_4.jsonl -o computed/en_de_4_metric.jsonl`|

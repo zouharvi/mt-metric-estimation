@@ -5,17 +5,17 @@ sys.path.append("src")
 import utils
 import argparse
 import json
-import csv
 import os
 import me_zoo
 
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
-    args.add_argument("-dt", "--data-train", default="computed/en_de_human_metric_train.jsonl")
+    args.add_argument("-dt", "--data-train", default="computed/en_de_human_metric.jsonl")
     args.add_argument("-dd", "--data-dev", default=None)
     args.add_argument("-m", "--model", default="1")
     args.add_argument("-f", "--fusion", type=int, default=None)
     args.add_argument("-dn", "--dev-n", type=int, default=None)
+    args.add_argument("-tn", "--train-n", type=int, default=None)
     args.add_argument("--metric", default="bleu")
     args.add_argument("--metric-dev", default="zscore")
     args.add_argument(
@@ -55,6 +55,9 @@ if __name__ == "__main__":
             print("Unkown dev size specified")
             exit()
         
+    if args.train_n is None:
+        args.train_n = len(data_train)
+
     # (src, ref, hyp, conf, bleu)
     data = [
         sent | {
@@ -64,15 +67,17 @@ if __name__ == "__main__":
         for sent in data
     ]
 
-    encoder = utils.BPEEncoder(vocab_size)
-    encoder.fit([x["src+hyp"] for x in data])
-    data_bpe = encoder.transform([x["src+hyp"] for x in data])
-    data = [
-        {"src+hyp_bpe": sent_bpe} | sent
-        for sent, sent_bpe in zip(data, data_bpe)
-    ]
-    # the first 10k is test
-    data_train = data[args.dev_n:]
+    if args.model.startswith("1"):
+        encoder = utils.BPEEncoder(vocab_size)
+        encoder.fit([x["src+hyp"] for x in data])
+        data_bpe = encoder.transform([x["src+hyp"] for x in data])
+        data = [
+            {"src+hyp_bpe": sent_bpe} | sent
+            for sent, sent_bpe in zip(data, data_bpe)
+        ]
+
+    # the first 1k/10k is test
+    data_train = data[args.dev_n:args.train_n+args.dev_n]
     data_dev = data[:args.dev_n]
 
     # define logging function wrapper

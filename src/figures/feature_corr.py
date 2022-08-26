@@ -47,9 +47,9 @@ if __name__ == "__main__":
         "me_all": "ME all",
     }
     with open(args.data, "r") as f:
-        data = [json.loads(x) for x in f.readlines()]
+        data = [json.loads(x) for x in f.readlines()][:10000]
     with open(args.data_human, "r") as f:
-        data_human = [json.loads(x) for x in f.readlines()]
+        data_human = [json.loads(x) for x in f.readlines()][:1000]
     print(len(data))
     KEYS_X_HUMAN = [
         'conf', 'conf_exp',
