@@ -15,14 +15,14 @@ if __name__ == "__main__":
         default="computed/en_de_human_metric.jsonl"
     )
     args.add_argument(
-        "-mp", "--model-path",
+        "-mp", "--model-load-path",
         default="models/en_de_outroop_23_bleu_bleu_r.pt"
     )
     args.add_argument("-m", "--model", default="1hd75b10lin")
     args.add_argument("-f", "--fusion", type=int, default=1)
     args.add_argument("-dn", "--data-n", type=int, default=None)
     args.add_argument(
-        "-bp", "--bpe-path",
+        "-lb", "--load-bpe",
         default="models/bpe_news_500k_h1.pkl"
     )
     args.add_argument("--metric", default="bleu")
@@ -52,7 +52,7 @@ if __name__ == "__main__":
         for sent in data
     ]
 
-    with open(args.bpe_path, "rb") as f:
+    with open(args.load_bpe, "rb") as f:
         encoder = pickle.load(f)
 
     data_bpe = encoder.transform([x["src+hyp"] for x in data])

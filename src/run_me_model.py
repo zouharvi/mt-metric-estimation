@@ -16,14 +16,21 @@ if __name__ == "__main__":
         default="computed/en_de_human_metric.jsonl"
     )
     args.add_argument("-dd", "--data-dev", default=None)
-    args.add_argument("-m", "--model", default="1")
+    args.add_argument("-m", "--model", default="1hd75b10lin")
     args.add_argument("-f", "--fusion", type=int, default=None)
+    args.add_argument("--epochs", type=int, default=10)
     args.add_argument("-dn", "--dev-n", type=int, default=None)
     args.add_argument("-tn", "--train-n", type=int, default=None)
     args.add_argument(
         "-sb", "--save-bpe", default=None,
         help="Store BPE model (path)"
     )
+    args.add_argument(
+        "-lb", "--load-bpe", default=None,
+        help="Load BPE model (path)"
+    )
+    # should have None default otherwise we always just fine-tune
+    args.add_argument("-mp", "--model-load-path", default=None)
     args.add_argument(
         "-hn", "--hypothesis-n", type=int, default=1,
         help="Has to be specified so that dev & train set is correct (when get_expand_hyp is used)"
@@ -82,8 +89,13 @@ if __name__ == "__main__":
     ]
 
     if args.model.startswith("1"):
-        encoder = utils.BPEEncoder(vocab_size)
-        encoder.fit([x["src+hyp"] for x in data])
+        if args.load_bpe is None:
+            encoder = utils.BPEEncoder(vocab_size)
+            encoder.fit([x["src+hyp"] for x in data])
+        else:
+            with open(args.load_bpe, "rb") as f:
+                encoder = pickle.load(f)
+
         data_bpe = encoder.transform([x["src+hyp"] for x in data])
         data = [
             {"src+hyp_bpe": sent_bpe} | sent
@@ -111,6 +123,7 @@ if __name__ == "__main__":
     print(f"Training model {args.model} with fusion {args.fusion}")
     model.train_epochs(
         data_train, data_dev,
+        epochs=args.epochs,
         metric=args.metric,
         metric_dev=args.metric_dev, logger=log_step,
         save_path=args.logfile.replace(

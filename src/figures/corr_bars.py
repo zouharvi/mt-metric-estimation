@@ -12,13 +12,14 @@ if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument(
         "-bl", "--baseline-logfiles", nargs="+",
-        # TODO: change to en-de
         default=[
-            "logs/en_de_somnorif_4_chrf.jsonl",
+            # 10k
             "logs/en_de_somnorif_4_bleu.jsonl",
-            "logs/en_de_somnorif_4_comet.jsonl",
+            "logs/en_de_somnorif_4_chrf.jsonl",
             "logs/en_de_somnorif_4_meteor.jsonl",
+            "logs/en_de_somnorif_4_comet.jsonl",
             "logs/en_de_somnorif_4_ter.jsonl",
+            # 1k
             "logs/en_de_somnorif_4_zscore.jsonl",
         ]
     )
@@ -28,11 +29,11 @@ if __name__ == "__main__":
         # results are en-de, the filenames are wrong
         default=[
             # 10k
-            "logs/de_en_outroop_20_chrf.jsonl",
             "logs/en_de_outroop_23_bleu_bleu_r.jsonl",
-            "logs/de_en_outroop_20_comet.jsonl",
-            "logs/de_en_outroop_20_meteor.jsonl",
-            "logs/de_en_outroop_20_ter.jsonl",
+            "logs/en_de_outroop_23_chrf_chrf_r.jsonl",
+            "logs/en_de_outroop_23_meteor_meteor_r.jsonl",
+            "logs/en_de_outroop_23_comet_comet_r.jsonl",
+            "logs/en_de_outroop_23_ter_ter_r.jsonl",
             # 1k
             "logs/en_de_outroop_23_zscore_zscore.jsonl",
         ],
@@ -42,10 +43,10 @@ if __name__ == "__main__":
         # TODO: change to text-only
         default=[
             # 10k
-            "logs/en_de_outroop_24_chrf_chrf.jsonl",
             "logs/en_de_outroop_24_bleu_bleu.jsonl",
-            "logs/en_de_outroop_24_comet_comet.jsonl",
+            "logs/en_de_outroop_24_chrf_chrf.jsonl",
             "logs/en_de_outroop_24_meteor_meteor.jsonl",
+            "logs/en_de_outroop_24_comet_comet.jsonl",
             "logs/en_de_outroop_24_ter_ter.jsonl",
             # 1k
             "logs/en_de_outroop_24_zscore_zscore.jsonl",
@@ -56,7 +57,7 @@ if __name__ == "__main__":
     )
     args = args.parse_args()
 
-    METRICS = ["bleu", "chrf", "ter", "meteor", "comet", "zscore"]
+    METRICS = ["bleu", "chrf", "meteor", "comet", "ter", "zscore"]
 
     data = defaultdict(list)
 
@@ -71,16 +72,6 @@ if __name__ == "__main__":
     for f, metric in zip(args.baseline_logfiles, METRICS):
         with open(f, "r") as f:
             data_b = [json.loads(line) for line in f.readlines()]
-            # individual features are going to be in a different figures
-            # data[metric].append(
-            #     [x for x in data_b if x["model"] == "len_raw"][0]
-            # )
-            # data[metric].append(
-            #     [x for x in data_b if x["model"] == "conf_raw"][0]
-            # )
-            # data[metric].append(
-            #     [x for x in data_b if x["model"] == "conf_exp"][0]
-            # )
             data_tfidf = [
                 x for x in data_b if x["model"].startswith("tfidf_lr_")]
             model_best_tfidf = max(
