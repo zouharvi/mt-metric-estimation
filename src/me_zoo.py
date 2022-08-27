@@ -69,7 +69,8 @@ def get_model(args):
         model = MEModelRNN(
             vocab_size, 512, 128, fusion=args.fusion,
             sigmoid=False, relu=True,
-            num_layers=2, dropout=0.0, final_hidden_dropout=0.75, batch_size=10
+            num_layers=2, dropout=0.0, final_hidden_dropout=0.75, batch_size=10,
+            load_path=args.model_path,
         )
     elif args.model == "bd":
         from me_model_b_dense import MEModelBaselineDense

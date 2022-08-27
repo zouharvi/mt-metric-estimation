@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+
+import json
+import argparse
+import pickle
+import numpy as np
+import sys
+sys.path.append("src")
+import me_zoo
+
+if __name__ == "__main__":
+    args = argparse.ArgumentParser()
+    args.add_argument(
+        "-d", "--data",
+        default="computed/en_de_human_metric.jsonl"
+    )
+    args.add_argument(
+        "-mp", "--model-path",
+        default="models/en_de_outroop_23_bleu_bleu_r.pt"
+    )
+    args.add_argument("-m", "--model", default="1hd75b10lin")
+    args.add_argument("-f", "--fusion", type=int, default=1)
+    args.add_argument("-dn", "--data-n", type=int, default=None)
+    args.add_argument(
+        "-bp", "--bpe-path",
+        default="models/bpe_news_500k_h1.pkl"
+    )
+    args.add_argument("--metric", default="bleu")
+    args = args.parse_args()
+
+    model, vocab_size = me_zoo.get_model(args)
+
+    with open(args.data, "r") as f:
+        data = [json.loads(x) for x in f.readlines()][:args.data_n]
+
+    if "human" in args.data and args.data_n != 1000:
+        print(
+            "You're using the human data but your dev-n is not 1k as described in the paper"
+        )
+        exit()
+    if "human" not in args.data and args.data_n != 10000:
+        print(
+            "You're not using the human data but your dev-n is not 10k as described in the paper"
+        )
+        exit()
+
+    data = [
+        sent | {
+            "src+hyp": sent["src"] + " [SEP] " + sent["tgts"][0][0],
+            "hyp": sent["tgts"][0][0],
+        }
+        for sent in data
+    ]
+
+    with open(args.bpe_path, "rb") as f:
+        encoder = pickle.load(f)
+
+    data_bpe = encoder.transform([x["src+hyp"] for x in data])
+    data = [
+        {"src+hyp_bpe": sent_bpe} | sent
+        for sent, sent_bpe in zip(data, data_bpe)
+    ]
+
+    print(f"Evaluating model {args.model} with fusion {args.fusion}")
+    _, y_pred = model.eval_dev(
+        data,
+        metric=args.metric,
+    )
+    y_true = [sent["metrics"][args.metric] for sent in data]
+
+    corr = np.corrcoef(y_pred, y_true)[0, 1]
+
+    # TODO verify on train
+    print(f"Correlation with {args.metric} is {corr:.4f}")

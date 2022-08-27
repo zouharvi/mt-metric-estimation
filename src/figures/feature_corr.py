@@ -109,7 +109,7 @@ if __name__ == "__main__":
             ax = ax1 if key_x_i < THRESHOLD_X else ax2
             ax.text(
                 metric_i, key_x_i % THRESHOLD_X,
-                f"{corr:.2f}",
+                f"{corr:.0%}",
                 color=get_color(abs(corr)),
                 ha="center", va="center"
             )

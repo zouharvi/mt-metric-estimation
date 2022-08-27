@@ -56,6 +56,7 @@ class MEModelRNN(torch.nn.Module):
         )
         
         if load_path is not None:
+            print("Loading model")
             self.load_state_dict(torch.load(load_path))
 
         self.loss_fn = torch.nn.MSELoss()

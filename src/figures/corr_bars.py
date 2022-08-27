@@ -29,12 +29,12 @@ if __name__ == "__main__":
         default=[
             # 10k
             "logs/de_en_outroop_20_chrf.jsonl",
-            "logs/de_en_outroop_23_bleu_bleu_r.jsonl",
+            "logs/en_de_outroop_23_bleu_bleu_r.jsonl",
             "logs/de_en_outroop_20_comet.jsonl",
             "logs/de_en_outroop_20_meteor.jsonl",
             "logs/de_en_outroop_20_ter.jsonl",
             # 1k
-            "logs/de_en_outroop_23_zscore_zscore.jsonl",
+            "logs/en_de_outroop_23_zscore_zscore.jsonl",
         ],
     )
     args.add_argument(
@@ -112,9 +112,11 @@ if __name__ == "__main__":
     for metric_i, metric in enumerate(METRICS):
         data_local = data[metric]
         plt.bar(
-            [x_i + metric_i / (len(METRICS) + 1.5)
-             for x_i, x in enumerate(data_local)],
-            [abs(x["dev_corr"]) for x in data_local],
+            [
+                x_i + metric_i / (len(METRICS) + 1.5)
+             for x_i, x in enumerate(data_local)
+             ],
+            [100*abs(x["dev_corr"]) for x in data_local],
             tick_label=[
                 # ("\n" if x_i % 2 else "") + 
                 fig_utils.PRETTY_NAME[x["model"]]
@@ -130,8 +132,8 @@ if __name__ == "__main__":
         x= [0.835, 2.835], ymin=0, ymax=0.65,
         linestyle=":", color="black",
     )
-    plt.ylim(None, 0.65)
-    plt.ylabel("Correlation")
+    plt.ylim(None, 65)
+    plt.ylabel("Correlation (%)")
 
     plt.legend(
         ncol=3, bbox_to_anchor=(0.5, 1.3), loc="upper center"

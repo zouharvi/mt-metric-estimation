@@ -15,12 +15,18 @@ if __name__ == "__main__":
         "-d", "--data",
         default="computed/en_de_human_metric.jsonl"
     )
-    args.add_argument("-mp", "--model-path", default="1")
+    args.add_argument(
+        "-mp", "--model-path",
+        default="models/en_de_outroop_23_bleu_bleu_r.pt"
+    )
     args.add_argument("-dn", "--data-n", type=int, default=None)
-    args.add_argument("-bp", "--bpe-path",
-                      default="models/models/bpe_news_500k_h1.pkl")
+    args.add_argument(
+        "-bp", "--bpe-path",
+        default="models/bpe_news_500k_h1.pkl"
+    )
     args.add_argument("-m", "--model", default="1hd75b10lin")
     args.add_argument("-f", "--fusion", type=int, default=1)
+    args.add_argument("-s", "--samples", type=int, default=10)
     args.add_argument("--metric", default="bleu")
     args = args.parse_args()
 
@@ -63,16 +69,25 @@ if __name__ == "__main__":
         print(
             f"{x[0]:>5.2f} | {x[1]:>5.2f} | {sent['src']} | {sent['ref']} | {sent['tgts'][0][0]}")
 
-    print_example(pred_all[0])
-    print_example(pred_all[5])
-    print_example(pred_all[10])
-    print_example(pred_all[15])
-    print_example(pred_all[20])
-    print_example(pred_all[25])
-    print()
-    print_example(pred_all[-0])
-    print_example(pred_all[-5])
-    print_example(pred_all[-10])
-    print_example(pred_all[-15])
-    print_example(pred_all[-20])
-    print_example(pred_all[-25])
+    presented = set()
+    i = 0
+    while len(presented) < args.samples:
+        sent = pred_all[i][2]
+        if sent["src+hyp"] in presented:
+            i += 1
+            continue
+        i += 1
+        presented.add(sent["src+hyp"])
+        print_example(pred_all[i])
+    print("\n" + "="*10 + "\n")
+
+    presented = set()
+    i = 0
+    while len(presented) < args.samples:
+        sent = pred_all[-i][2]
+        if sent["src+hyp"] in presented:
+            i += 1
+            continue
+        i += 1
+        presented.add(sent["src+hyp"])
+        print_example(pred_all[-i])

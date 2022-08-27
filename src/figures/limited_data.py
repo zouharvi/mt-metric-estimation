@@ -56,8 +56,8 @@ if __name__ == "__main__":
             "logs/en_de_dwile_3_5k.jsonl",
             "logs/en_de_dwile_3_10k.jsonl",
             "logs/en_de_dwile_3_50k.jsonl",
-            # "logs/en_de_dwile_3_100k.jsonl",
-            # "logs/en_de_dwile_2_500k.jsonl",
+            "logs/en_de_dwile_3_100k.jsonl",
+            # "logs/en_de_dwile_3_500k.jsonl",
         ],
     )
     args = args.parse_args()
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     data_h5 = []
     data_b = []
 
-    plt.figure(figsize=(5, 2))
+    plt.figure(figsize=(5, 2.5))
 
     for f, n in zip(args.model_logfiles, args.nums):
         with open(f, "r") as f:
@@ -100,12 +100,12 @@ if __name__ == "__main__":
             model_lr_multi = [x for x in data if x["model"] == "lr_multi"][0]
             data_b.append(model_lr_multi["dev_corr"])
 
-    PLOT_KWARGS = {"marker": "."}
+    PLOT_KWARGS = {"marker": ".", "markersize": 13}
 
     plt.plot(
-        list(range(len(args.nums))),
-        [x for x in data_h1],
-        label="ME all (H1)",
+        list(range(len(args.nums)))[:len(data_h5)],
+        [x for x in data_h5],
+        label="ME all (H5)",
         **PLOT_KWARGS,
     )
     plt.plot(
@@ -115,9 +115,9 @@ if __name__ == "__main__":
         **PLOT_KWARGS,
     )
     plt.plot(
-        list(range(len(args.nums)))[:len(data_h5)],
-        [x for x in data_h5],
-        label="ME all (H5)",
+        list(range(len(args.nums))),
+        [x for x in data_h1],
+        label="ME all (H1)",
         **PLOT_KWARGS,
     )
     plt.plot(
@@ -133,6 +133,7 @@ if __name__ == "__main__":
         list(range(len(args.nums))),
         [f"{x//1000}k" for x in args.nums]
     )
+    plt.xlabel("Authentic data size")
     plt.ylabel("BLEU correlation")
 
     plt.legend()
