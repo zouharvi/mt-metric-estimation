@@ -15,7 +15,7 @@ class MEModelBaseline():
     def __init__(self):
         pass
 
-    def train_epochs(self, data_train, data_dev, metric="bleu", metric_dev=None, logger=None):
+    def train_epochs(self, data_train, data_dev, metric="bleu", metric_dev=None, logger=None, **kwargs):
         y_train = [sent["metrics"][metric] for sent in data_train]
         y_dev = [sent["metrics"][metric_dev] for sent in data_dev]
 

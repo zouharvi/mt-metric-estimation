@@ -1,8 +1,9 @@
 # Added by zouharvi
 *.bkp
 *.dtmp
-computed
-logs
+/computed
+/logs
+/models
 /figures
 
 # Byte-compiled / optimized / DLL files

@@ -14,7 +14,7 @@ class MEModelComet():
         self.model_name = "wmt21-comet-qe-mqm"
         self.comet_metric = evaluate.load("comet", config_name=self.model_name)
 
-    def train_epochs(self, data_train, data_dev, metric, metric_dev=None, logger=None):
+    def train_epochs(self, data_train, data_dev, logger=None, **kwargs):
         data_dev_pred = self.comet_metric.compute(
             predictions=[sent["hyp"] for sent in data_dev],
             sources=[sent["src"] for sent in data_dev],

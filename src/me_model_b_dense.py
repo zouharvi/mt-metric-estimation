@@ -78,7 +78,7 @@ class MEModelBaselineDense(torch.nn.Module):
 
         return dev_losses, dev_pred
 
-    def train_epochs(self, data_train, data_dev, metric="bleu", epochs=30, logger=None):
+    def train_epochs(self, data_train, data_dev, metric="bleu", epochs=30, logger=None, **kwargs):
         for epoch in range(epochs):
             self.train(True)
 

@@ -29,7 +29,7 @@ if __name__ == "__main__":
         default=[
             # 10k
             "logs/de_en_outroop_20_chrf.jsonl",
-            "logs/de_en_outroop_20_bleu.jsonl",
+            "logs/de_en_outroop_23_bleu_bleu_r.jsonl",
             "logs/de_en_outroop_20_comet.jsonl",
             "logs/de_en_outroop_20_meteor.jsonl",
             "logs/de_en_outroop_20_ter.jsonl",
@@ -40,14 +40,13 @@ if __name__ == "__main__":
     args.add_argument(
         "-mlt", "--model-logfiles-text", nargs="+",
         # TODO: change to text-only
-        # results are en-de, the filenames are wrong
         default=[
             # 10k
-            "logs/de_en_outroop_22_chrf.jsonl",
-            "logs/de_en_outroop_22_bleu.jsonl",
-            "logs/de_en_outroop_22_comet.jsonl",
-            "logs/de_en_outroop_22_meteor.jsonl",
-            "logs/de_en_outroop_22_ter.jsonl",
+            "logs/en_de_outroop_24_chrf_chrf.jsonl",
+            "logs/en_de_outroop_24_bleu_bleu.jsonl",
+            "logs/en_de_outroop_24_comet_comet.jsonl",
+            "logs/en_de_outroop_24_meteor_meteor.jsonl",
+            "logs/en_de_outroop_24_ter_ter.jsonl",
             # 1k
             "logs/en_de_outroop_24_zscore_zscore.jsonl",
         ],
@@ -132,6 +131,7 @@ if __name__ == "__main__":
         linestyle=":", color="black",
     )
     plt.ylim(None, 0.65)
+    plt.ylabel("Correlation")
 
     plt.legend(
         ncol=3, bbox_to_anchor=(0.5, 1.3), loc="upper center"

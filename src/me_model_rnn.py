@@ -12,7 +12,8 @@ DEVICE = utils.get_device()
 class MEModelRNN(torch.nn.Module):
     def __init__(
         self, vocab_size, embd_size, hidden_size, batch_size=1,
-        fusion=None, sigmoid=True, relu=False, dropout=0.0, num_layers=1, final_hidden_dropout=0.0, sigmoid_scale=1.0
+        fusion=None, sigmoid=True, relu=False, dropout=0.0, num_layers=1, final_hidden_dropout=0.0, sigmoid_scale=1.0,
+        load_path=None,
     ):
         super().__init__()
         self.vocab_size = vocab_size
@@ -53,6 +54,9 @@ class MEModelRNN(torch.nn.Module):
             torch.nn.Linear(100, 1),
             torch.nn.Sigmoid() if sigmoid else torch.nn.Identity(),
         )
+        
+        if load_path is not None:
+            self.load_state_dict(torch.load(load_path))
 
         self.loss_fn = torch.nn.MSELoss()
 
@@ -60,6 +64,7 @@ class MEModelRNN(torch.nn.Module):
 
         # move to GPU
         self.to(DEVICE)
+
 
     def forward(self, sents):
         local_batch_size = len(sents)
@@ -134,7 +139,9 @@ class MEModelRNN(torch.nn.Module):
 
         return dev_losses, dev_pred
 
-    def train_epochs(self, data_train, data_dev, metric="bleu", metric_dev=None, epochs=10, logger=None):
+    def train_epochs(self, data_train, data_dev, metric="bleu", metric_dev=None, epochs=10, logger=None, **kwargs):
+        best_dev_corr = 0
+
         if metric_dev == None:
             metric_dev = metric
 
@@ -183,11 +190,17 @@ class MEModelRNN(torch.nn.Module):
 
             print(f"Epoch {epoch:0>5}")
             if logger is not None:
+                dev_corr = np.corrcoef(dev_pred, data_dev_score)[0, 1]
                 logstep = {
                     "epoch": epoch,
                     "train_loss": np.average(train_losses),
                     "dev_loss": np.average(dev_losses),
                     "train_corr": np.corrcoef(train_pred, data_train_score)[0, 1],
-                    "dev_corr": np.corrcoef(dev_pred, data_dev_score)[0, 1],
+                    "dev_corr": dev_corr,
                 }
                 logger(logstep)
+            if "save_path" in kwargs is not None:
+                if abs(dev_corr) > abs(best_dev_corr):
+                    best_dev_corr = dev_corr
+                    print(f"Saving model because new dev_corr is {dev_corr:.3f}")
+                    torch.save(self.state_dict(), kwargs["save_path"])

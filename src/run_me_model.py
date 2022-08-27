@@ -1,21 +1,33 @@
 #!/usr/bin/env python3
 
+import os
+import json
+import argparse
+import utils
+import pickle
 import sys
 sys.path.append("src")
-import utils
-import argparse
-import json
-import os
 import me_zoo
 
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
-    args.add_argument("-dt", "--data-train", default="computed/en_de_human_metric.jsonl")
+    args.add_argument(
+        "-dt", "--data-train",
+        default="computed/en_de_human_metric.jsonl"
+    )
     args.add_argument("-dd", "--data-dev", default=None)
     args.add_argument("-m", "--model", default="1")
     args.add_argument("-f", "--fusion", type=int, default=None)
     args.add_argument("-dn", "--dev-n", type=int, default=None)
     args.add_argument("-tn", "--train-n", type=int, default=None)
+    args.add_argument(
+        "-sb", "--save-bpe", default=None,
+        help="Store BPE model (path)"
+    )
+    args.add_argument(
+        "-hn", "--hypothesis-n", type=int, default=1,
+        help="Has to be specified so that dev & train set is correct (when get_expand_hyp is used)"
+    )
     args.add_argument("--metric", default="bleu")
     args.add_argument("--metric-dev", default="zscore")
     args.add_argument(
@@ -41,20 +53,22 @@ if __name__ == "__main__":
             data_dev = data_dev[:args.dev_n]
 
         if "human" in args.data_dev and args.dev_n != 1000:
-            print("You're using the human data but your dev-n is not 1k as described in the paper")
+            print(
+                "You're using the human data but your dev-n is not 1k as described in the paper")
             exit()
-            
+
         # data_dev is first
         data = data_dev + data_train
         args.dev_n = len(data_dev)
     else:
         if "human" in args.data_train and args.dev_n != 1000:
-            print("You're using the human data but your dev-n is not 1k as described in the paper")
+            print(
+                "You're using the human data but your dev-n is not 1k as described in the paper")
             exit()
         if args.dev_n is None:
             print("Unkown dev size specified")
             exit()
-        
+
     if args.train_n is None:
         args.train_n = len(data_train)
 
@@ -75,10 +89,17 @@ if __name__ == "__main__":
             {"src+hyp_bpe": sent_bpe} | sent
             for sent, sent_bpe in zip(data, data_bpe)
         ]
+        if args.save_bpe is not None:
+            print("Saving BPE model to", args.save_bpe)
+            with open(args.save_bpe, "wb") as f:
+                pickle.dump(encoder, f)
 
     # the first 1k/10k is test
-    data_train = data[args.dev_n:args.train_n+args.dev_n]
-    data_dev = data[:args.dev_n]
+    data_train = data[
+        args.dev_n * args.hypothesis_n:(args.train_n + args.dev_n) * args.hypothesis_n
+    ]
+    # skip every n-th in the development part (take only the first)
+    data_dev = data[:args.dev_n * args.hypothesis_n:args.hypothesis_n]
 
     # define logging function wrapper
     def log_step(data):
@@ -88,4 +109,10 @@ if __name__ == "__main__":
         # flushes at the end
 
     print(f"Training model {args.model} with fusion {args.fusion}")
-    model.train_epochs(data_train, data_dev, metric=args.metric, metric_dev=args.metric_dev, logger=log_step)
+    model.train_epochs(
+        data_train, data_dev,
+        metric=args.metric,
+        metric_dev=args.metric_dev, logger=log_step,
+        save_path=args.logfile.replace(
+            "logs/", "models/").replace(".jsonl", ".pt"),
+    )
