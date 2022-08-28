@@ -45,8 +45,7 @@ if __name__ == "__main__":
         default=[
             # 10k
             "logs/en_de_outroop_24_bleu_bleu.jsonl",
-            # wrong direction just in the logfile name
-            "logs/de_en_outroop_24_bleurt_bleurt.jsonl",
+            "logs/en_de_outroop_24_bleurt_bleurt.jsonl",
             "logs/en_de_outroop_24_chrf_chrf.jsonl",
             "logs/en_de_outroop_24_meteor_meteor.jsonl",
             "logs/en_de_outroop_24_comet_comet.jsonl",
