@@ -35,7 +35,7 @@ if __name__ == "__main__":
             "logs/en_de_outroop_23_comet_comet_r.jsonl",
             "logs/en_de_outroop_23_ter_ter_r.jsonl",
             # 1k
-            "logs/en_de_outroop_23_zscore_zscore.jsonl",
+            "logs/en_de_outroop_23_zscore_zscore_r_news.jsonl",
         ],
     )
     args.add_argument(
@@ -49,7 +49,7 @@ if __name__ == "__main__":
             "logs/en_de_outroop_24_comet_comet.jsonl",
             "logs/en_de_outroop_24_ter_ter.jsonl",
             # 1k
-            "logs/en_de_outroop_24_zscore_zscore.jsonl",
+            "logs/en_de_outroop_24_zscore_zscore_r_news.jsonl",
         ],
     )
     args.add_argument(
@@ -67,7 +67,8 @@ if __name__ == "__main__":
     with open(args.comet_logfile, "r") as f:
         data_comet = [json.loads(line) for line in f.readlines()]
     for metric in METRICS:
-        data[metric].append([x for x in data_comet if x["metric"] == metric][0])
+        data[metric].append(
+            [x for x in data_comet if x["metric"] == metric][0])
 
     for f, metric in zip(args.baseline_logfiles, METRICS):
         with open(f, "r") as f:
@@ -83,12 +84,13 @@ if __name__ == "__main__":
                 [x for x in data_b if x["model"] == "lr_multi"][0]
             )
 
-    for f, metric in zip(args.model_logfiles_all, METRICS):
-        with open(f, "r") as f:
+    for fn, metric in zip(args.model_logfiles_all, METRICS):
+        with open(fn, "r") as f:
             data_m = [json.loads(line) for line in f.readlines()]
             model_best_epoch = max(
                 data_m, key=lambda x: x["dev_corr"]
             )
+            print(f"{fn}: {model_best_epoch['dev_corr']:.2%}")
             data[metric].append({"model": "me_all"} | model_best_epoch)
 
     for f, metric in zip(args.model_logfiles_text, METRICS):
@@ -99,17 +101,16 @@ if __name__ == "__main__":
             )
             data[metric].append({"model": "me_text"} | model_best_epoch)
 
-
     for metric_i, metric in enumerate(METRICS):
         data_local = data[metric]
         plt.bar(
             [
                 x_i + metric_i / (len(METRICS) + 1.5)
-             for x_i, x in enumerate(data_local)
-             ],
-            [100*abs(x["dev_corr"]) for x in data_local],
+                for x_i, x in enumerate(data_local)
+            ],
+            [100 * abs(x["dev_corr"]) for x in data_local],
             tick_label=[
-                # ("\n" if x_i % 2 else "") + 
+                # ("\n" if x_i % 2 else "") +
                 fig_utils.PRETTY_NAME[x["model"]]
                 for x_i, x in enumerate(data_local)
             ] if metric_i == 2 else None,
@@ -120,10 +121,10 @@ if __name__ == "__main__":
         )
 
     plt.vlines(
-        x= [0.835, 2.835], ymin=0, ymax=0.65,
+        x=[0.835, 2.835], ymin=0, ymax=0.65,
         linestyle=":", color="black",
     )
-    plt.ylim(None, 65)
+    plt.ylim(None, 63)
     plt.ylabel("Correlation (%)")
 
     plt.legend(

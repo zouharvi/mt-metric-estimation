@@ -12,7 +12,7 @@ if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument(
         "-d", "--data",
-        default="computed/en_de_human_metric.jsonl"
+        default="computed/en_de_human_metric_fixed.jsonl"
     )
     args.add_argument(
         "-mp", "--model-load-path",
@@ -71,4 +71,4 @@ if __name__ == "__main__":
     corr = np.corrcoef(y_pred, y_true)[0, 1]
 
     # TODO verify on train
-    print(f"Correlation with {args.metric} is {corr:.4f}")
+    print(f"Correlation with {args.metric} is {corr:.2%}")

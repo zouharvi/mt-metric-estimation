@@ -13,7 +13,7 @@ from matplotlib import gridspec
 
 
 def get_color(val):
-    if val > 0.15:
+    if val > 0.2:
         return "black"
     else:
         return "white"
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     )
     args.add_argument(
         "-dh", "--data-human",
-        default="computed/en_de_human_metric.jsonl",
+        default="computed/en_de_human_metric_fixed.jsonl",
     )
     args = args.parse_args()
 
@@ -46,11 +46,13 @@ if __name__ == "__main__":
         "me_text": "ME text",
         "me_all": "ME all",
     }
+
+    # load data with default dev sets sizes
     with open(args.data, "r") as f:
-        data = [json.loads(x) for x in f.readlines()][:10000]
+        data = [json.loads(x) for x in f.readlines()[:10000]]
     with open(args.data_human, "r") as f:
-        data_human = [json.loads(x) for x in f.readlines()][:1000]
-    print(len(data))
+        data_human = [json.loads(x) for x in f.readlines()[:1000]]
+
     KEYS_X_HUMAN = [
         'conf', 'conf_exp',
         '|s|', '|t|', '|s|+|t|', '|s|-|t|', '|s|/|t|',
@@ -78,6 +80,13 @@ if __name__ == "__main__":
         sent["|s|/|t|"] = len_src / len_tgt
 
     METRICS = ['bleu', 'chrf', 'ter', 'meteor', 'comet']
+
+    # compute metrics correlation with human (needed in the paper)
+    data_zscore = [sent["zscore"] for sent in data_human_y]
+    for metric in METRICS:
+        data_metric = [sent[metric] for sent in data_human_y]
+        print(f"zscore - {metric:<10}: {np.corrcoef(data_zscore, data_metric)[0,1]:.2%}")
+    print("="*10)
 
     img1 = np.zeros((len(KEYS_X_HUMAN), len(METRICS) + 1))
     img2 = np.zeros((len(KEYS_X_REST), len(METRICS)))

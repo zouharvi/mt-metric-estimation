@@ -13,7 +13,7 @@ if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument(
         "-dt", "--data-train",
-        default="computed/en_de_human_metric.jsonl"
+        default="computed/en_de_human_metric_fixed.jsonl"
     )
     args.add_argument("-dd", "--data-dev", default=None)
     args.add_argument("-m", "--model", default="1hd75b10lin")
