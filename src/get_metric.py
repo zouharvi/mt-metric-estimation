@@ -19,12 +19,12 @@ if __name__ == "__main__":
     ter_metric = sacrebleu.metrics.TER()
     meteor_metric = evaluate.load('meteor')
     comet_metric = evaluate.load('comet')
+    bleurt_metric = evaluate.load('bleurt', module_type="metric")
 
     fout = open(args.output, "w")
 
     with open(args.input, "r") as f:
         data_text = [json.loads(x) for x in f.readlines()]
-    
 
     if "score" in data_text[0]:
         human_file = True
@@ -55,28 +55,6 @@ if __name__ == "__main__":
         sent["conf"] = sent["tgts"][0][1]
         sent["conf_exp"] = np.exp(sent["tgts"][0][1])
 
-        if not human_file:
-            sent["conf_var"] = np.var([x[1] for x in sent["tgts"]])
-            sent["conf_exp_var"] = np.var([np.exp(x[1]) for x in sent["tgts"]])
-            h1_hx_bleu = [
-                bleu_metric.sentence_score(
-                    hypothesis=sent_tgt, references=[x[0]]
-                ).score / 100
-                for x in sent["tgts"][1:]
-            ]
-            sent["h1_hx_bleu_avg"] = np.average(h1_hx_bleu)
-            sent["h1_hx_bleu_var"] = np.var(h1_hx_bleu)
-            hx_hx_bleu = [
-                bleu_metric.sentence_score(
-                    hypothesis=x[0], references=[y[0]]
-                ).score / 100
-                for x_i, x in enumerate(sent["tgts"])
-                for y_i, y in enumerate(sent["tgts"])
-                if x_i != y_i
-            ]
-            sent["hx_hx_bleu_avg"] = np.average(hx_hx_bleu)
-            sent["hx_hx_bleu_var"] = np.var(hx_hx_bleu)
-
 
         bleu_score = bleu_metric.sentence_score(
             hypothesis=sent_tgt, references=[sent["ref"]]
@@ -90,6 +68,9 @@ if __name__ == "__main__":
         meteor_score = meteor_metric.compute(
             predictions=[sent_tgt], references=[sent["ref"]]
         )["meteor"]
+        bleurt_score = bleurt_metric.compute(
+            predictions=[sent_tgt], references=[sent["ref"]],
+        )["scores"][0]
 
         sent["metrics"] = {
             "bleu": bleu_score,
@@ -97,12 +78,35 @@ if __name__ == "__main__":
             "ter": ter_score,
             "meteor": meteor_score,
             "comet": comet_score,
+            "bleurt": bleurt_metric,
         }
+        
+        if not human_file:
+            sent["conf_var"] = np.var([x[1] for x in sent["tgts"]])
+            sent["conf_exp_var"] = np.var([np.exp(x[1]) for x in sent["tgts"]])
+            h1_hx_bleu = [
+                bleu_metric.sentence_score(
+                    hypothesis=sent_tgt, references=[x[0]]
+                ).score / 100
+                for x in sent["tgts"][1:]
+            ]
+            sent["metrics"]["h1_hx_bleu_avg"] = np.average(h1_hx_bleu)
+            sent["metrics"]["h1_hx_bleu_var"] = np.var(h1_hx_bleu)
+            hx_hx_bleu = [
+                bleu_metric.sentence_score(
+                    hypothesis=x[0], references=[y[0]]
+                ).score / 100
+                for x_i, x in enumerate(sent["tgts"])
+                for y_i, y in enumerate(sent["tgts"])
+                if x_i != y_i
+            ]
+            sent["metric"]["hx_hx_bleu_avg"] = np.average(hx_hx_bleu)
+            sent["metric"]["hx_hx_bleu_var"] = np.var(hx_hx_bleu)
 
         if human_file:
             sent["metrics"]["score"] = sent.pop("score")
             sent["metrics"]["zscore"] = sent.pop("zscore")
-            
+
         fout.write(json.dumps(sent, ensure_ascii=False) + "\n")
 
         if line_i % 100 == 0:

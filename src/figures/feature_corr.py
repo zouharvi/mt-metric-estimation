@@ -27,7 +27,7 @@ if __name__ == "__main__":
     )
     args.add_argument(
         "-dh", "--data-human",
-        default="computed/en_de_human_metric_fixed.jsonl",
+        default="computed/en_de_human_metric_brt.jsonl",
     )
     args = args.parse_args()
 
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         sent["|s|-|t|"] = len_src - len_tgt
         sent["|s|/|t|"] = len_src / len_tgt
 
-    METRICS = ['bleu', 'chrf', 'ter', 'meteor', 'comet']
+    METRICS = ['bleu', 'chrf', 'ter', 'meteor', 'comet', "bleurt"]
 
     # compute metrics correlation with human (needed in the paper)
     data_zscore = [sent["zscore"] for sent in data_human_y]

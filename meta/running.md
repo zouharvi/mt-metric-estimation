@@ -1,8 +1,8 @@
 
 |date|status|nickname|comment|command|
 |-|-|-|-|-|
-|08-28-2022|running|outroop_{23,24}_news|zscore|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_outroop_23_zscore_zscore_r_news.jsonl -f 1 -m 1hd75b10lin --metric bleu --metric-dev bleu -dt computed/en_de_human_metric.jsonl --dev-n 1000 --epochs 110  -lb models/bpe_news_500k_h1.pkl`|
-|08-27-2022|running|windrose_0|finetuning (all metrics)|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" ./src/run_me_model.py -f 1 --dev-n 1000 -dt computed/en_de_human_metric_fixed.jsonl -lb models/bpe_news_500k_h1.pkl -mp models/en_de_outroop_23_bleu_bleu_s.pt --metric zscore --metric-dev zscore -l logs/en_de_windrose_0_bleu.jsonl --epochs 1000`|
+|08-28-2022|ok|outroop_{23,24}_news|zscore|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_outroop_23_zscore_zscore_r_news.jsonl -f 1 -m 1hd75b10lin --metric bleu --metric-dev bleu -dt computed/en_de_human_metric.jsonl --dev-n 1000 --epochs 110  -lb models/bpe_news_500k_h1.pkl`|
+|08-27-2022|ok|windrose_0|finetuning (all metrics)|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" ./src/run_me_model.py -f 1 --dev-n 1000 -dt computed/en_de_human_metric_fixed.jsonl -lb models/bpe_news_500k_h1.pkl -mp models/en_de_outroop_23_bleu_bleu_s.pt --metric zscore --metric-dev zscore -l logs/en_de_windrose_0_bleu.jsonl --epochs 1000`|
 |08-27-2022|running||metrics h4|`bsub -W 120:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_h4.jsonl -o computed/en_de_h4_metric.jsonl`|
 |08-27-2022|running||metrics h3|`bsub -W 120:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_h3.jsonl -o computed/en_de_h3_metric.jsonl`|
 |08-27-2022|running||metrics h5 (longer)|`bsub -W 120:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_h5.jsonl -o computed/en_de_h5l_metric.jsonl`|

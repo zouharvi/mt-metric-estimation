@@ -40,6 +40,8 @@ class MEModelRNN(torch.nn.Module):
         extra_features = 0
         if fusion == 1:
             extra_features += 6
+        elif fusion == 2:
+            extra_features += 10
 
         self.final_hidden_dropout = torch.nn.Dropout(p=final_hidden_dropout)
 
@@ -78,20 +80,39 @@ class MEModelRNN(torch.nn.Module):
         ]
         x = torch.nn.utils.rnn.pad_sequence(x, batch_first=True)
 
-        len_src = [len(sent["src"].split()) for sent in sents]
-        len_hyp = [len(sent["hyp"].split()) for sent in sents]
-        x_extra = torch.tensor(
-            [
+
+        if self.fusion == 1:
+            len_src = [len(sent["src"].split()) for sent in sents]
+            len_hyp = [len(sent["hyp"].split()) for sent in sents]
+            x_extra = torch.tensor(
                 [
-                    sent["conf"], np.exp(sent["conf"]),
-                    len_src[sent_i], len_hyp[sent_i],
-                    len_src[sent_i] - len_hyp[sent_i],
-                    len_src[sent_i] / len_hyp[sent_i],
-                ]
-                for sent_i, sent in enumerate(sents)
-            ],
-            dtype=torch.float32
-        ).to(DEVICE)
+                    [
+                        sent["conf"], np.exp(sent["conf"]),
+                        len_src[sent_i], len_hyp[sent_i],
+                        len_src[sent_i] - len_hyp[sent_i],
+                        len_src[sent_i] / len_hyp[sent_i],
+                    ]
+                    for sent_i, sent in enumerate(sents)
+                ],
+                dtype=torch.float32
+            ).to(DEVICE)
+        elif self.fusion == 2:
+            len_src = [len(sent["src"].split()) for sent in sents]
+            len_hyp = [len(sent["hyp"].split()) for sent in sents]
+            x_extra = torch.tensor(
+                [
+                    [
+                        sent["conf"], np.exp(sent["conf"]),
+                        len_src[sent_i], len_hyp[sent_i],
+                        len_src[sent_i] - len_hyp[sent_i],
+                        len_src[sent_i] / len_hyp[sent_i],
+                        sent["h1_hx_bleu_avg"], sent["h1_hx_bleu_var"],
+                        sent["hx_hx_bleu_avg"], sent["hx_hx_bleu_var"],
+                    ]
+                    for sent_i, sent in enumerate(sents)
+                ],
+                dtype=torch.float32
+            ).to(DEVICE)
 
         x = self.embd(x)
         x = self.encoder(x)
