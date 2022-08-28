@@ -73,8 +73,6 @@ if __name__ == "__main__":
         total_sents += 1
         unique_sents.add(sent["src"] + " ||| " + sent["ref"])
 
-        # TODO: get confidence
-
         conf = calculate_logprob(
             task_prefix + sent["src"], sent["mt"], model, tokenizer
         )

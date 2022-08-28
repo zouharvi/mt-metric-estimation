@@ -55,8 +55,7 @@ if __name__ == "__main__":
         sent_src = sent[src_lang]
         sent_ref = sent[tgt_lang]
         sent_src_enc = model.encode(sent_src)
-        # TODO: change nbest to higher numbers and see whether we can make the metric prediction
-        # better with same data size
+
         sent_tgt_enc = model.generate(sent_src_enc, nbest=5)
         sent_tgt = [(model.decode(x["tokens"]), x["score"].item()) for x in sent_tgt_enc]
         # print(sent_tgt, sent_tgt_score, sent_tgt_enc.keys())

@@ -70,5 +70,4 @@ if __name__ == "__main__":
 
     corr = np.corrcoef(y_pred, y_true)[0, 1]
 
-    # TODO verify on train
     print(f"Correlation with {args.metric} is {corr:.2%}")

@@ -5,58 +5,23 @@ import utils
 import torch
 import tqdm
 import numpy as np
+from me_model_rnn import compute_extra_vector
 
 DEVICE = utils.get_device()
 
-def compute_extra_vector(sents, fusion):
-    if fusion == 1:
-        len_src = [len(sent["src"].split()) for sent in sents]
-        len_hyp = [len(sent["hyp"].split()) for sent in sents]
-        x_extra = torch.tensor(
-            [
-                [
-                    sent["conf"], np.exp(sent["conf"]),
-                    len_src[sent_i], len_hyp[sent_i],
-                    len_src[sent_i] - len_hyp[sent_i],
-                    len_src[sent_i] / len_hyp[sent_i],
-                ]
-                for sent_i, sent in enumerate(sents)
-            ],
-            dtype=torch.float32
-        ).to(DEVICE)
-        return x_extra
-    elif fusion == 2:
-        len_src = [len(sent["src"].split()) for sent in sents]
-        len_hyp = [len(sent["hyp"].split()) for sent in sents]
-        x_extra = torch.tensor(
-            [
-                [
-                    sent["conf"], np.exp(sent["conf"]),
-                    len_src[sent_i], len_hyp[sent_i],
-                    len_src[sent_i] - len_hyp[sent_i],
-                    len_src[sent_i] / len_hyp[sent_i],
-                    sent["h1_hx_bleu_avg"], sent["h1_hx_bleu_var"],
-                    sent["hx_hx_bleu_avg"], sent["hx_hx_bleu_var"],
-                ]
-                for sent_i, sent in enumerate(sents)
-            ],
-            dtype=torch.float32
-        ).to(DEVICE)
-        return x_extra
 
-class MEModelRNN(torch.nn.Module):
+class MEModelRNNMulti(torch.nn.Module):
     def __init__(
         self, vocab_size, embd_size, hidden_size, batch_size=1,
-        fusion=None, sigmoid=True, relu=False, dropout=0.0, num_layers=1, final_hidden_dropout=0.0, sigmoid_scale=1.0,
-        load_path=None,
+        fusion=None, dropout=0.0, num_layers=1, final_hidden_dropout=0.0,
+        load_path=None, target_metrics=None,
     ):
         super().__init__()
         self.vocab_size = vocab_size
         self.batch_size = batch_size
         self.fusion = fusion
-        assert sigmoid_scale >= 1.0
-        self.sigmoid_scale = sigmoid_scale
-        self.sigmoid_offset = (sigmoid_scale - 1) / 2
+
+        self.target_metrics = target_metrics
 
         self.embd = torch.nn.Linear(vocab_size, embd_size)
 
@@ -80,29 +45,25 @@ class MEModelRNN(torch.nn.Module):
 
         self.final_hidden_dropout = torch.nn.Dropout(p=final_hidden_dropout)
 
-        # TODO: deeper model
         self.regressor = torch.nn.Sequential(
             torch.nn.Linear(
                 num_layers * hidden_size * 2 + extra_features,
                 100
             ),
             torch.nn.Dropout(p=dropout),
-            torch.nn.ReLU() if relu else torch.nn.Identity(),
-            torch.nn.Linear(100, 1),
-            torch.nn.Sigmoid() if sigmoid else torch.nn.Identity(),
+            torch.nn.ReLU(),
+            torch.nn.Linear(100, len(target_metrics)),
         )
-        
+
         if load_path is not None:
             print("Loading model")
             self.load_state_dict(torch.load(load_path))
 
         self.loss_fn = torch.nn.MSELoss()
-
         self.optimizer = torch.optim.Adam(self.parameters(), lr=10e-6)
 
         # move to GPU
         self.to(DEVICE)
-
 
     def forward(self, sents):
         local_batch_size = len(sents)
@@ -114,7 +75,6 @@ class MEModelRNN(torch.nn.Module):
             ).float().to(DEVICE) for sent in sents
         ]
         x = torch.nn.utils.rnn.pad_sequence(x, batch_first=True)
-
 
         x_extra = compute_extra_vector(sents, self.fusion)
 
@@ -128,17 +88,14 @@ class MEModelRNN(torch.nn.Module):
         # apply large dropout on the hidden state
         x = self.final_hidden_dropout(x)
 
-        if self.fusion in {1,2}:
+        if self.fusion in {1, 2}:
             x = torch.hstack((x, x_extra))
 
         x = self.regressor(x)
 
-        # multiply final sigmoid output and center
-        x = x * self.sigmoid_scale - self.sigmoid_offset
-
         return x
 
-    def eval_dev(self, data_dev, metric):
+    def eval_dev(self, data_dev):
         self.train(False)
         dev_losses = []
         dev_pred = []
@@ -154,22 +111,20 @@ class MEModelRNN(torch.nn.Module):
                 score_pred = self.forward(batch)
 
                 score = torch.tensor(
-                    [[sent["metrics"][metric]] for sent in batch], requires_grad=False
+                    [[sent["metrics"][metric] for metric in self.target_metrics] for sent in batch], requires_grad=False
                 ).to(DEVICE)
+
                 loss = self.loss_fn(score_pred, score)
 
                 dev_losses.append(loss.detach().cpu().item())
-                dev_pred += score_pred.reshape(-1).detach().cpu().numpy().tolist()
+                dev_pred += score_pred.detach().cpu().numpy().tolist()
 
                 batch = []
 
         return dev_losses, dev_pred
 
-    def train_epochs(self, data_train, data_dev, metric="bleu", metric_dev=None, epochs=10, logger=None, **kwargs):
+    def train_epochs(self, data_train, data_dev, epochs=10, logger=None, **kwargs):
         best_dev_corr = 0
-
-        if metric_dev == None:
-            metric_dev = metric
 
         for epoch in range(1, epochs + 1):
             self.train(True)
@@ -189,7 +144,7 @@ class MEModelRNN(torch.nn.Module):
                 score_pred = self.forward(batch)
 
                 score = torch.tensor(
-                    [[sent["metrics"][metric]] for sent in batch], requires_grad=False
+                    [[sent["metrics"][metric] for metric in self.target_metrics] for sent in batch], requires_grad=False
                 ).to(DEVICE)
                 loss = self.loss_fn(score_pred, score)
 
@@ -199,34 +154,54 @@ class MEModelRNN(torch.nn.Module):
                 self.optimizer.step()
 
                 train_losses.append(loss.detach().cpu().item())
-                train_pred += score_pred.reshape(-1).detach(
-                ).cpu().numpy().tolist()
+                train_pred += (
+                    score_pred.detach().cpu().numpy().tolist()
+                )
 
                 batch = []
 
             # logging dev stuff
-            dev_losses, dev_pred = self.eval_dev(data_dev, metric=metric_dev)
-            # crop to match batch size omittance
-            data_train_score = [
-                sent["metrics"][metric] for sent in data_train
-            ][:len(train_pred)]
-            data_dev_score = [
-                sent["metrics"][metric_dev] for sent in data_dev
-            ][:len(dev_pred)]
+            dev_losses, dev_pred = self.eval_dev(data_dev)
+
+            train_pred = np.array(train_pred)
+            dev_pred = np.array(dev_pred)
+
+            dev_corr = {}
+            train_corr = {}
+
+            for metric_i, metric in enumerate(self.target_metrics):
+                # crop to match batch size omittance
+                pred_train_metric = train_pred[:, metric_i]
+                data_train_metric = [
+                    sent["metrics"][metric] for sent in data_train
+                ][:len(train_pred)]
+                train_corr[metric] = np.corrcoef(
+                    pred_train_metric, data_train_metric
+                )[0, 1]
+
+                pred_dev_metric = dev_pred[:, metric_i]
+                data_dev_metric = [
+                    sent["metrics"][metric] for sent in data_dev
+                ][:len(dev_pred)]
+                dev_corr[metric] = np.corrcoef(
+                    pred_dev_metric, data_dev_metric
+                )[0, 1]
 
             print(f"Epoch {epoch:0>5}")
             if logger is not None:
-                dev_corr = np.corrcoef(dev_pred, data_dev_score)[0, 1]
                 logstep = {
                     "epoch": epoch,
                     "train_loss": np.average(train_losses),
                     "dev_loss": np.average(dev_losses),
-                    "train_corr": np.corrcoef(train_pred, data_train_score)[0, 1],
+                    "train_corr": train_corr,
                     "dev_corr": dev_corr,
                 }
                 logger(logstep)
-            if "save_path" in kwargs is not None:
-                if abs(dev_corr) > abs(best_dev_corr):
-                    best_dev_corr = dev_corr
-                    print(f"Saving model because new dev_corr is {dev_corr:.3f}")
+
+            if kwargs.get("save_path") is not None and kwargs.get("save_metric") is not None:
+                if abs(dev_corr[kwargs["save_metric"]]) > abs(best_dev_corr):
+                    best_dev_corr = dev_corr[kwargs["save_metric"]]
+                    print(
+                        f"Saving model because new dev_corr of {kwargs['save_metric']} is {best_dev_corr:.3f}"
+                    )
                     torch.save(self.state_dict(), kwargs["save_path"])

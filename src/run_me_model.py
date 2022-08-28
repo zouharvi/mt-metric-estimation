@@ -21,6 +21,7 @@ if __name__ == "__main__":
     args.add_argument("--epochs", type=int, default=10)
     args.add_argument("-dn", "--dev-n", type=int, default=None)
     args.add_argument("-tn", "--train-n", type=int, default=None)
+    args.add_argument("--save-metric", default="zscore")
     args.add_argument(
         "-sb", "--save-bpe", default=None,
         help="Store BPE model (path)"
@@ -36,7 +37,7 @@ if __name__ == "__main__":
         help="Has to be specified so that dev & train set is correct (when get_expand_hyp is used)"
     )
     args.add_argument("--metric", default="bleu")
-    args.add_argument("--metric-dev", default="zscore")
+    args.add_argument("--metric-dev", default=None)
     args.add_argument(
         "-l", "--logfile",
         default="logs/de_en_outroop.jsonl"
@@ -88,7 +89,8 @@ if __name__ == "__main__":
         for sent in data
     ]
 
-    if args.model.startswith("1"):
+    # skip for models that don't use BPE
+    if not args.model in {"b", "comet"}:
         if args.load_bpe is None:
             encoder = utils.BPEEncoder(vocab_size)
             encoder.fit([x["src+hyp"] for x in data])
@@ -120,12 +122,18 @@ if __name__ == "__main__":
             f.write("\n")
         # flushes at the end
 
+    # set default evaluation metric
+    if args.metric_dev is None:
+        args.metric_dev = args.metric
     print(f"Training model {args.model} with fusion {args.fusion}")
     model.train_epochs(
         data_train, data_dev,
         epochs=args.epochs,
-        metric=args.metric,
-        metric_dev=args.metric_dev, logger=log_step,
+        # disregarded for multi model
+        metric=args.metric, metric_dev=args.metric_dev,
+        logger=log_step,
+        # used only by the multi model
+        save_metric=args.save_metric,
         save_path=args.logfile.replace(
             "logs/", "models/").replace(".jsonl", ".pt"),
     )

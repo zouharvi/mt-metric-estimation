@@ -23,7 +23,7 @@ if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument(
         "-d", "--data",
-        default="computed/en_de_metric.jsonl",
+        default="computed/en_de_metric_brt.jsonl",
     )
     args.add_argument(
         "-dh", "--data-human",
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         sent["|s|-|t|"] = len_src - len_tgt
         sent["|s|/|t|"] = len_src / len_tgt
 
-    METRICS = ['bleu', 'chrf', 'ter', 'meteor', 'comet', "bleurt"]
+    METRICS = ['bleu', 'chrf', 'ter', 'meteor', 'comet', 'bleurt']
 
     # compute metrics correlation with human (needed in the paper)
     data_zscore = [sent["zscore"] for sent in data_human_y]
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     img1 = np.zeros((len(KEYS_X_HUMAN), len(METRICS) + 1))
     img2 = np.zeros((len(KEYS_X_REST), len(METRICS)))
 
-    plt.figure(figsize=(10, 2.85))
+    plt.figure(figsize=(11, 2.85))
 
     # the left table gets more width because it has an extra column
     gs = gridspec.GridSpec(1, 2, width_ratios=[1.198, 1])
@@ -162,7 +162,7 @@ if __name__ == "__main__":
         "vmax": 0.45,
     }
     ax1.imshow(img1, aspect=0.6, **IMSHOW_KWARGS)
-    ax2.imshow(img2, aspect=0.6, **IMSHOW_KWARGS)
+    ax2.imshow(img2, aspect=0.616, **IMSHOW_KWARGS)
     # plt.colorbar(cmap)
 
     for ax, keys_x, extra_metrics in zip(
@@ -188,9 +188,9 @@ if __name__ == "__main__":
     ax2.yaxis.set_ticks_position("right")
 
     plt.tight_layout(
-        pad=0.1, w_pad=5,
+        pad=0, w_pad=4,
         # make ticks visible
-        rect=[0.04, 0, 0.96, 1],
+        rect=[0.03, 0, 0.97, 1],
     )
     plt.savefig("figures/feature_corr.pdf")
     plt.show()

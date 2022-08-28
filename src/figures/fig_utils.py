@@ -10,8 +10,8 @@ COLORS = [
     "cornflowerblue",
     "seagreen",
     "orange",
+    "lightpink",
     "dimgray",
-    "violet",
 ]
 COLORS_FIRE = ["#9c2963", "#282e9b", "#fb9e07"]
 
@@ -26,6 +26,7 @@ PRETTY_NAME = {
     "ter": "TER",
     "meteor": "METEOR",
     "comet": "COMET",
+    "bleurt": "BLEURT",
 
     "conf_exp": "exp(conf$_t$)",
     "conf_var": "Var($\{$conf$_{h_i} | h_i \in H \}$)",

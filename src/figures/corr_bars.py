@@ -15,6 +15,7 @@ if __name__ == "__main__":
         default=[
             # 10k
             "logs/en_de_somnorif_4_bleu.jsonl",
+            "logs/en_de_somnorif_4_bleurt.jsonl",
             "logs/en_de_somnorif_4_chrf.jsonl",
             "logs/en_de_somnorif_4_meteor.jsonl",
             "logs/en_de_somnorif_4_comet.jsonl",
@@ -29,21 +30,23 @@ if __name__ == "__main__":
         # results are en-de, the filenames are wrong
         default=[
             # 10k
-            "logs/en_de_outroop_23_bleu_bleu_r.jsonl",
-            "logs/en_de_outroop_23_chrf_chrf_r.jsonl",
-            "logs/en_de_outroop_23_meteor_meteor_r.jsonl",
-            "logs/en_de_outroop_23_comet_comet_r.jsonl",
-            "logs/en_de_outroop_23_ter_ter_r.jsonl",
+            "logs/en_de_outroop_25_bleu_bleu.jsonl",
+            "logs/en_de_outroop_25_bleurt_bleurt.jsonl",
+            "logs/en_de_outroop_25_chrf_chrf.jsonl",
+            "logs/en_de_outroop_25_meteor_meteor.jsonl",
+            "logs/en_de_outroop_25_comet_comet.jsonl",
+            "logs/en_de_outroop_25_ter_ter.jsonl",
             # 1k
             "logs/en_de_outroop_23_zscore_zscore_r_news.jsonl",
         ],
     )
     args.add_argument(
         "-mlt", "--model-logfiles-text", nargs="+",
-        # TODO: change to text-only
         default=[
             # 10k
             "logs/en_de_outroop_24_bleu_bleu.jsonl",
+            # wrong direction just in the logfile name
+            "logs/de_en_outroop_24_bleurt_bleurt.jsonl",
             "logs/en_de_outroop_24_chrf_chrf.jsonl",
             "logs/en_de_outroop_24_meteor_meteor.jsonl",
             "logs/en_de_outroop_24_comet_comet.jsonl",
@@ -57,7 +60,7 @@ if __name__ == "__main__":
     )
     args = args.parse_args()
 
-    METRICS = ["bleu", "chrf", "meteor", "comet", "ter", "zscore"]
+    METRICS = ["bleu", "bleurt", "chrf", "meteor", "comet", "ter", "zscore"]
 
     data = defaultdict(list)
 
@@ -118,18 +121,20 @@ if __name__ == "__main__":
             label=fig_utils.PRETTY_NAME[metric],
             edgecolor="black",
             linewidth=1.5,
+            hatch="////" if metric == "zscore" else "",
         )
 
     plt.vlines(
-        x=[0.835, 2.835], ymin=0, ymax=0.65,
+        x=[0.835, 2.835], ymin=0, ymax=65,
         linestyle=":", color="black",
+        linewidth=1
     )
     plt.ylim(None, 63)
     plt.ylabel("Correlation (%)")
 
     plt.legend(
-        ncol=3, bbox_to_anchor=(0.5, 1.3), loc="upper center"
+        ncol=4, bbox_to_anchor=(0.45, 1.3), loc="upper center"
     )
-    plt.tight_layout(rect=(0, 0, 1, 1.02), pad=0.1)
+    plt.tight_layout(rect=(-0.015, 0, 1.03, 1.02), pad=0.1)
     plt.savefig("figures/baseline_comparison.pdf")
     plt.show()
