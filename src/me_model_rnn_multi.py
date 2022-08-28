@@ -111,7 +111,13 @@ class MEModelRNNMulti(torch.nn.Module):
                 score_pred = self.forward(batch)
 
                 score = torch.tensor(
-                    [[sent["metrics"][metric] for metric in self.target_metrics] for sent in batch], requires_grad=False
+                    [
+                        [
+                            sent["metrics"][metric]
+                            for metric in self.target_metrics
+                        ]
+                        for sent in batch
+                    ], requires_grad=False
                 ).to(DEVICE)
 
                 loss = self.loss_fn(score_pred, score)
@@ -144,7 +150,13 @@ class MEModelRNNMulti(torch.nn.Module):
                 score_pred = self.forward(batch)
 
                 score = torch.tensor(
-                    [[sent["metrics"][metric] for metric in self.target_metrics] for sent in batch], requires_grad=False
+                    [
+                        [
+                            sent["metrics"][metric]
+                            for metric in self.target_metrics
+                        ]
+                        for sent in batch
+                    ], requires_grad=False
                 ).to(DEVICE)
                 loss = self.loss_fn(score_pred, score)
 

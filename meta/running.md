@@ -1,9 +1,10 @@
 
 |date|status|nickname|comment|command|
 |-|-|-|-|-|
-|08-28-2022|running|racoon_1|multi (autometrics)|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 src/run_me_model.py -m joist_multi -dt computed/en_de_human_brt.jsonl --dev-n 1000 -lb models/bpe_news_500k_h1.pkl  -l logs/en_de_racoon_1.jsonl`|
+|08-28-2022|ok|outroop_26|(fusion 1, human data, metrics)|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -dt computed/en_de_human_metric_brt.jsonl --dev-n 1000 -f 1 -m 1hd75b10lin -l logs/en_de_outroop_26_bleu.jsonl --metric bleu`|
+|08-28-2022|running|racoon_1|multi (autometrics)|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 src/run_me_model.py -m joist_multi -dt computed/en_de_metric_brt.jsonl --dev-n 10000 -lb models/bpe_news_500k_h1.pkl  -l logs/en_de_racoon_1.jsonl`|
 |08-28-2022|running|racoon_0|multi (all)|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 src/run_me_model.py -m joist_multi -dt computed/en_de_human_metric_brt.jsonl --dev-n 1000 -lb models/bpe_news_500k_h1.pkl  -l logs/en_de_racoon_0.jsonl`|
-|08-28-2022|ok|outroop_25|x->x (fusion 2, metrics)|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_outroop_25_bleu_bleu.jsonl -f 2 -m 1hd75b10lin --metric bleu --metric-dev bleu -dt computed/en_de_metric.jsonl --dev-n 10000`|
+|08-28-2022|running|outroop_25|x->x (fusion 2, metrics)|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_outroop_25_bleu_bleu.jsonl -f 2 -m 1hd75b10lin --metric bleu --metric-dev bleu -dt computed/en_de_metric.jsonl --dev-n 10000`|
 |08-28-2022|ok|outroop_{23,24}_news|zscore|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_outroop_23_zscore_zscore_r_news.jsonl -f 1 -m 1hd75b10lin --metric bleu --metric-dev bleu -dt computed/en_de_human_metric.jsonl --dev-n 1000 --epochs 110  -lb models/bpe_news_500k_h1.pkl`|
 |08-27-2022|ok|windrose_0|finetuning (all metrics)|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" ./src/run_me_model.py -f 1 --dev-n 1000 -dt computed/en_de_human_metric_fixed.jsonl -lb models/bpe_news_500k_h1.pkl -mp models/en_de_outroop_23_bleu_bleu_s.pt --metric zscore --metric-dev zscore -l logs/en_de_windrose_0_bleu.jsonl --epochs 1000`|
 |08-27-2022|running||metrics h4|`bsub -W 120:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_h4.jsonl -o computed/en_de_h4_metric.jsonl`|
