@@ -67,7 +67,7 @@ if __name__ == "__main__":
     data_h5 = []
     data_b = []
 
-    plt.figure(figsize=(5, 2.5))
+    plt.figure(figsize=(5, 2.7))
 
     for f, n in zip(args.model_logfiles, args.nums):
         with open(f, "r") as f:
@@ -137,6 +137,6 @@ if __name__ == "__main__":
     plt.ylabel("BLEU correlation")
 
     plt.legend()
-    plt.tight_layout(pad=0.1)
+    plt.tight_layout(pad=0.2)
     plt.savefig("figures/limited_data.pdf")
     plt.show()

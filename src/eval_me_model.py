@@ -12,14 +12,18 @@ if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument(
         "-d", "--data",
-        default="computed/en_de_human_metric_fixed.jsonl"
+        default="computed/en_de_human_metric_brt.jsonl"
+    )
+    args.add_argument(
+        "-od", "--output-data",
+        default=None
     )
     args.add_argument(
         "-mp", "--model-load-path",
-        default="models/en_de_outroop_23_bleu_bleu_r.pt"
+        default="models/en_de_outroop_25_bleu_bleu_s.pt"
     )
     args.add_argument("-m", "--model", default="1hd75b10lin")
-    args.add_argument("-f", "--fusion", type=int, default=1)
+    args.add_argument("-f", "--fusion", type=int, default=2)
     args.add_argument("-dn", "--data-n", type=int, default=None)
     args.add_argument(
         "-lb", "--load-bpe",
@@ -71,3 +75,13 @@ if __name__ == "__main__":
     corr = np.corrcoef(y_pred, y_true)[0, 1]
 
     print(f"Correlation with {args.metric} is {corr:.2%}")
+
+    if args.output_data is not None:
+        fout = open(args.output_data, "w")
+        for sent, y_pred_val in zip(data, y_pred):
+            if "metrics_pred" not in sent:
+                sent["metrics_pred"] = {}
+            sent.pop("src+hyp")
+            sent.pop("src+hyp_bpe")
+            sent["metrics_pred"][args.metric] = y_pred_val
+            fout.write(json.dumps(sent, ensure_ascii=False) + "\n")

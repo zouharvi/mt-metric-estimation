@@ -31,22 +31,6 @@ if __name__ == "__main__":
     )
     args = args.parse_args()
 
-    PRETTY_NAME = {
-        "bleu": "BLEU",
-        "chrf": "ChrF",
-        "ter": "TER",
-        "meteor": "METEOR",
-        "comet": "COMET",
-
-        "tfidf": "LR TF-IDF",
-        "lr_multi": "LR Multi",
-        "conf_exp": "exp(conf.)",
-        "conf_raw": "conf.",
-        "len_raw": "|s|+|t|",
-        "me_text": "ME text",
-        "me_all": "ME all",
-    }
-
     # load data with default dev sets sizes
     with open(args.data, "r") as f:
         data = [json.loads(x) for x in f.readlines()[:10000]]

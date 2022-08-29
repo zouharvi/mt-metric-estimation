@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
     data = defaultdict(list)
 
-    plt.figure(figsize=(5, 2.7))
+    plt.figure(figsize=(5, 3))
 
     # possible future bug: this only works because comet-qe is at the beginning
     with open(args.comet_logfile, "r") as f:
@@ -132,8 +132,8 @@ if __name__ == "__main__":
     plt.ylabel("Correlation (%)")
 
     plt.legend(
-        ncol=4, bbox_to_anchor=(0.45, 1.3), loc="upper center"
+        ncol=4, bbox_to_anchor=(0.45, 1.27), loc="upper center"
     )
-    plt.tight_layout(rect=(-0.015, 0, 1.03, 1.02), pad=0.1)
+    plt.tight_layout(rect=(-0.015, 0, 1.03, 1.0), pad=0.1)
     plt.savefig("figures/baseline_comparison.pdf")
     plt.show()

@@ -30,12 +30,10 @@ def get_model(args):
         from me_model_rnn_multi import MEModelRNNMulti
         vocab_size = 8192
 
-        TARGET_METRICS = ["bleu", "bleurt", "ter", "meteor", "comet"]
+        TARGET_METRICS = ["bleu", "bleurt", "chrf", "ter", "meteor", "comet"]
         if "human" in args.data_train:
             print("Adding zscore to the optimization set")
             TARGET_METRICS.append("zscore")
-        else:
-            add_target_metrics_zscore = False
 
         model = MEModelRNNMulti(
             vocab_size, 512, 128, fusion=args.fusion,
