@@ -3,6 +3,7 @@
 import os
 import json
 import argparse
+import random
 import utils
 import pickle
 import sys
@@ -13,7 +14,7 @@ if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument(
         "-dt", "--data-train",
-        default="computed/en_de_human_metric_fixed.jsonl"
+        default="computed/en_de_human_metric_brt.jsonl"
     )
     args.add_argument("-dd", "--data-dev", default=None)
     args.add_argument("-m", "--model", default="1hd75b10lin")
@@ -21,6 +22,7 @@ if __name__ == "__main__":
     args.add_argument("--epochs", type=int, default=10)
     args.add_argument("-dn", "--dev-n", type=int, default=None)
     args.add_argument("-tn", "--train-n", type=int, default=None)
+    args.add_argument("--shuffle-train", type=int, default=None)
     args.add_argument("--save-metric", default="zscore")
     args.add_argument(
         "-sb", "--save-bpe", default=None,
@@ -109,9 +111,12 @@ if __name__ == "__main__":
                 pickle.dump(encoder, f)
 
     # the first 1k/10k is test
-    data_train = data[
-        args.dev_n * args.hypothesis_n:(args.train_n + args.dev_n) * args.hypothesis_n
-    ]
+    data_train = data[args.dev_n * args.hypothesis_n:]
+    # sample randomly
+    if args.shuffle_train is not None:
+        random.seed(args.shuffle_train)
+        random.shuffle(data_train)
+    data_train = data_train[:args.train_n * args.hypothesis_n]
     # skip every n-th in the development part (take only the first)
     data_dev = data[:args.dev_n * args.hypothesis_n:args.hypothesis_n]
 
