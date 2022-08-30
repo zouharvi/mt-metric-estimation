@@ -138,7 +138,7 @@ class MEModelRNN(torch.nn.Module):
 
         return x
 
-    def eval_dev(self, data_dev, metric):
+    def eval_dev(self, data_dev, metric, scale_metric=1):
         self.train(False)
         dev_losses = []
         dev_pred = []
@@ -154,7 +154,7 @@ class MEModelRNN(torch.nn.Module):
                 score_pred = self.forward(batch)
 
                 score = torch.tensor(
-                    [[sent["metrics"][metric]] for sent in batch], requires_grad=False
+                    [[sent["metrics"][metric]*scale_metric] for sent in batch], requires_grad=False
                 ).to(DEVICE)
                 loss = self.loss_fn(score_pred, score)
 
@@ -165,8 +165,14 @@ class MEModelRNN(torch.nn.Module):
 
         return dev_losses, dev_pred
 
-    def train_epochs(self, data_train, data_dev, metric="bleu", metric_dev=None, epochs=10, logger=None, **kwargs):
+    def train_epochs(
+        self, data_train, data_dev,
+        metric="bleu", metric_dev=None,
+        epochs=10, logger=None,
+        **kwargs
+    ):
         best_dev_corr = 0
+        scale_metric = kwargs["scale_metric"]
 
         if metric_dev == None:
             metric_dev = metric
@@ -189,7 +195,7 @@ class MEModelRNN(torch.nn.Module):
                 score_pred = self.forward(batch)
 
                 score = torch.tensor(
-                    [[sent["metrics"][metric]] for sent in batch], requires_grad=False
+                    [[sent["metrics"][metric]*scale_metric] for sent in batch], requires_grad=False
                 ).to(DEVICE)
                 loss = self.loss_fn(score_pred, score)
 
@@ -205,7 +211,10 @@ class MEModelRNN(torch.nn.Module):
                 batch = []
 
             # logging dev stuff
-            dev_losses, dev_pred = self.eval_dev(data_dev, metric=metric_dev)
+            dev_losses, dev_pred = self.eval_dev(
+                data_dev, metric=metric_dev,
+                scale_metric=scale_metric
+            )
             # crop to match batch size omittance
             data_train_score = [
                 sent["metrics"][metric] for sent in data_train

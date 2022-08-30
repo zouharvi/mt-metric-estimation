@@ -22,6 +22,7 @@ if __name__ == "__main__":
     args.add_argument("--epochs", type=int, default=10)
     args.add_argument("-dn", "--dev-n", type=int, default=None)
     args.add_argument("-tn", "--train-n", type=int, default=None)
+    args.add_argument("--scale-metric", type=int, default=1)
     args.add_argument("--shuffle-train", type=int, default=None)
     args.add_argument("--save-metric", default="zscore")
     args.add_argument(
@@ -139,6 +140,8 @@ if __name__ == "__main__":
         logger=log_step,
         # used only by the multi model
         save_metric=args.save_metric,
-        save_path=args.logfile.replace(
-            "logs/", "models/").replace(".jsonl", ".pt"),
+        save_path=(
+            args.logfile.replace(            "logs/", "models/").replace(".jsonl", ".pt")
+        ),
+        scale_metric=args.scale_metric,
     )
