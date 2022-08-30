@@ -50,11 +50,12 @@ PRETTY_NAME = {
     "|s|/|t|": "$|s|/|t|$",
 
     # models
+    "mbert": "MBERT",
     "tfidf": "LR TF-IDF",
     "lr_multi": "LR Multi",
     "me_text": "ME text",
     "me_all": "ME all",
 
-    "wmt21-comet-qe-mqm": "COMET-QE",
+    "wmt21-comet-qe-mqm": "COMET-QE  ",
     "zscore": "z-score",
 }

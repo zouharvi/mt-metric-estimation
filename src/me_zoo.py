@@ -47,6 +47,9 @@ def get_model(args):
     elif args.model == "comet":
         from me_model_comet import MEModelComet
         model = MEModelComet()
+    elif args.model == "mbert":
+        from me_model_mbert import MEModelMBERT
+        model = MEModelMBERT(batch_size=10)
     else:
         raise Exception("Unknown model")
 

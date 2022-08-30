@@ -14,7 +14,7 @@ if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument(
         "-dt", "--data-train",
-        default="computed/en_de_human_metric_brt.jsonl"
+        default="computed/en_de_human_metric_ft.jsonl"
     )
     args.add_argument("-dd", "--data-dev", default=None)
     args.add_argument("-m", "--model", default="1hd75b10lin")
@@ -24,7 +24,6 @@ if __name__ == "__main__":
     args.add_argument("-tn", "--train-n", type=int, default=None)
     args.add_argument("--scale-metric", type=int, default=1)
     args.add_argument("--shuffle-train", type=int, default=None)
-    args.add_argument("--save-metric", default="zscore")
     args.add_argument(
         "-sb", "--save-bpe", default=None,
         help="Store BPE model (path)"
@@ -41,6 +40,7 @@ if __name__ == "__main__":
     )
     args.add_argument("--metric", default="bleu")
     args.add_argument("--metric-dev", default=None)
+    args.add_argument("--save-metric", default="bleu")
     args.add_argument(
         "-l", "--logfile",
         default="logs/de_en_outroop.jsonl"
@@ -93,7 +93,7 @@ if __name__ == "__main__":
     ]
 
     # skip for models that don't use BPE
-    if not args.model in {"b", "comet"}:
+    if not args.model in {"b", "comet", "mbert"}:
         if args.load_bpe is None:
             encoder = utils.BPEEncoder(vocab_size)
             encoder.fit([x["src+hyp"] for x in data])
@@ -141,7 +141,7 @@ if __name__ == "__main__":
         # used only by the multi model
         save_metric=args.save_metric,
         save_path=(
-            args.logfile.replace(            "logs/", "models/").replace(".jsonl", ".pt")
+            args.logfile.replace("logs/", "models/").replace(".jsonl", ".pt")
         ),
         scale_metric=args.scale_metric,
     )

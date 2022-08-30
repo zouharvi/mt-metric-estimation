@@ -8,10 +8,13 @@ from figures import fig_utils
 import argparse
 import json
 
+# scp euler:/cluster/work/sachan/vilem/mt-metric-estimation/logs/en_de_outroop_25_ter*.jsonl logs/
+# scp euler:/cluster/work/sachan/vilem/mt-metric-estimation/logs/en_de_zepole*.jsonl logs/
+
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument(
-        "-bl", "--baseline-logfiles", nargs="+",
+        "--baseline-logfiles", nargs="+",
         default=[
             # 10k
             "logs/en_de_somnorif_4_bleu.jsonl",
@@ -25,9 +28,21 @@ if __name__ == "__main__":
         ]
     )
     args.add_argument(
-        "-mlad", "--model-logfiles-all", nargs="+",
-        # TODO: currently just human features
-        # results are en-de, the filenames are wrong
+        "--mbert-logfiles", nargs="+",
+        default=[
+            # 10k
+            "logs/en_de_zepole_1_bleu.jsonl",
+            "logs/en_de_zepole_1_bleurt.jsonl",
+            "logs/en_de_zepole_1_chrf.jsonl",
+            "logs/en_de_zepole_1_meteor.jsonl",
+            "logs/en_de_zepole_1_comet.jsonl",
+            "logs/en_de_zepole_1_ter.jsonl",
+            # 1k
+            "logs/en_de_zepole_1_zscore.jsonl",
+        ],
+    )
+    args.add_argument(
+        "--model-logfiles-all", nargs="+",
         default=[
             # 10k
             "logs/en_de_outroop_25_bleu_bleu.jsonl",
@@ -35,13 +50,13 @@ if __name__ == "__main__":
             "logs/en_de_outroop_25_chrf_chrf.jsonl",
             "logs/en_de_outroop_25_meteor_meteor.jsonl",
             "logs/en_de_outroop_25_comet_comet.jsonl",
-            "logs/en_de_outroop_25_ter_ter.jsonl",
+            "logs/en_de_outroop_25_ter_ter_unscaled.jsonl",
             # 1k
             "logs/en_de_outroop_23_zscore_zscore_r_news.jsonl",
         ],
     )
     args.add_argument(
-        "-mlt", "--model-logfiles-text", nargs="+",
+        "--model-logfiles-text", nargs="+",
         default=[
             # 10k
             "logs/en_de_outroop_24_bleu_bleu.jsonl",
@@ -70,7 +85,9 @@ if __name__ == "__main__":
         data_comet = [json.loads(line) for line in f.readlines()]
     for metric in METRICS:
         data[metric].append(
-            [x for x in data_comet if x["metric"] == metric][0])
+            [x for x in data_comet if x["metric"] == metric][0]
+            )
+
 
     for f, metric in zip(args.baseline_logfiles, METRICS):
         with open(f, "r") as f:
@@ -86,6 +103,14 @@ if __name__ == "__main__":
                 [x for x in data_b if x["model"] == "lr_multi"][0]
             )
 
+    for f, metric in zip(args.mbert_logfiles, METRICS):
+        with open(f, "r") as f:
+            data_m = [json.loads(line) for line in f.readlines()]
+            model_best_epoch = max(
+                data_m, key=lambda x: x["dev_corr"]
+            )
+            data[metric].append({"model": "mbert"} | model_best_epoch)
+
     for fn, metric in zip(args.model_logfiles_all, METRICS):
         with open(fn, "r") as f:
             data_m = [json.loads(line) for line in f.readlines()]
@@ -94,6 +119,7 @@ if __name__ == "__main__":
             )
             print(f"{fn}: {model_best_epoch['dev_corr']:.2%}")
             data[metric].append({"model": "me_all"} | model_best_epoch)
+            
 
     for f, metric in zip(args.model_logfiles_text, METRICS):
         with open(f, "r") as f:
@@ -124,7 +150,7 @@ if __name__ == "__main__":
         )
 
     plt.vlines(
-        x=[0.835, 2.835], ymin=0, ymax=65,
+        x=[0.835, 2.845], ymin=0, ymax=65,
         linestyle=":", color="black",
         linewidth=1
     )

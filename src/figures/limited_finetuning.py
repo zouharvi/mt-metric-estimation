@@ -17,7 +17,7 @@ def conf_interval(xs):
     if len(xs) <= 2:
         return 0
     interval = st.t.interval(
-        alpha=0.95, df=len(xs) - 1,
+        confidence=0.95, df=len(xs) - 1,
         loc=np.mean(xs),
         scale=st.sem(xs)
     )
