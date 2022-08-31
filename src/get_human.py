@@ -47,6 +47,11 @@ if __name__ == "__main__":
 
     tokenizer = T5Tokenizer.from_pretrained("t5-small")
     model = T5ForConditionalGeneration.from_pretrained("t5-small")
+    
+    # TODO this may not work
+    model.eval()
+    model.to(DEVICE)
+
     if args.direction == "en-de":
         task_prefix = "translate English to German: "
     else:
@@ -58,10 +63,6 @@ if __name__ == "__main__":
     elif args.direction == "en-de":
         src_lang = "en"
         tgt_lang = "de"
-
-    # disable dropout
-    # model.eval()
-    # model = model.to(DEVICE)
 
     fout = open(args.output, "w")
 

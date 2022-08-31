@@ -14,12 +14,7 @@ if __name__ == "__main__":
     args.add_argument("-t", "--total", type=int, default=None)
     args = args.parse_args()
 
-    bleu_metric = sacrebleu.metrics.BLEU(effective_order=True)
-    chrf_metric = sacrebleu.metrics.CHRF()
-    ter_metric = sacrebleu.metrics.TER()
-    meteor_metric = evaluate.load('meteor')
     comet_metric = evaluate.load('comet')
-    bleurt_metric = evaluate.load('bleurt', module_type="metric")
 
     fout = open(args.output, "w")
 
@@ -42,6 +37,15 @@ if __name__ == "__main__":
         progress_bar=True,
     )["scores"]
 
+    # release resources
+    del comet_metric
+
+    bleu_metric = sacrebleu.metrics.BLEU(effective_order=True)
+    chrf_metric = sacrebleu.metrics.CHRF()
+    ter_metric = sacrebleu.metrics.TER()
+    meteor_metric = evaluate.load('meteor')
+    bleurt_metric = evaluate.load('bleurt', module_type="metric")
+
     print("Computing main loop")
     for line_i, (sent, comet_score) in enumerate(tqdm.tqdm(zip(data_text, comet_scores), total=len(comet_scores))):
         # get first hypothesis
@@ -55,7 +59,6 @@ if __name__ == "__main__":
         sent["conf"] = sent["tgts"][0][1]
         sent["conf_exp"] = np.exp(sent["tgts"][0][1])
 
-
         bleu_score = bleu_metric.sentence_score(
             hypothesis=sent_tgt, references=[sent["ref"]]
         ).score / 100
@@ -64,7 +67,7 @@ if __name__ == "__main__":
         ).score / 100
         ter_score = ter_metric.sentence_score(
             hypothesis=sent_tgt, references=[sent["ref"]]
-        ).score
+        ).score / 100
         meteor_score = meteor_metric.compute(
             predictions=[sent_tgt], references=[sent["ref"]]
         )["meteor"]
@@ -78,7 +81,7 @@ if __name__ == "__main__":
             "ter": ter_score,
             "meteor": meteor_score,
             "comet": comet_score,
-            "bleurt": bleurt_metric,
+            "bleurt": bleurt_score,
         }
         
         if not human_file:
@@ -90,8 +93,8 @@ if __name__ == "__main__":
                 ).score / 100
                 for x in sent["tgts"][1:]
             ]
-            sent["metrics"]["h1_hx_bleu_avg"] = np.average(h1_hx_bleu)
-            sent["metrics"]["h1_hx_bleu_var"] = np.var(h1_hx_bleu)
+            sent["h1_hx_bleu_avg"] = np.average(h1_hx_bleu)
+            sent["h1_hx_bleu_var"] = np.var(h1_hx_bleu)
             hx_hx_bleu = [
                 bleu_metric.sentence_score(
                     hypothesis=x[0], references=[y[0]]
@@ -100,8 +103,8 @@ if __name__ == "__main__":
                 for y_i, y in enumerate(sent["tgts"])
                 if x_i != y_i
             ]
-            sent["metric"]["hx_hx_bleu_avg"] = np.average(hx_hx_bleu)
-            sent["metric"]["hx_hx_bleu_var"] = np.var(hx_hx_bleu)
+            sent["hx_hx_bleu_avg"] = np.average(hx_hx_bleu)
+            sent["hx_hx_bleu_var"] = np.var(hx_hx_bleu)
 
         if human_file:
             sent["metrics"]["score"] = sent.pop("score")

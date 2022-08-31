@@ -34,7 +34,7 @@ def compute_extra_vector(sents, fusion):
                     sent["conf"], np.exp(sent["conf"]),
                     len_src[sent_i], len_hyp[sent_i],
                     len_src[sent_i] - len_hyp[sent_i],
-                    len_src[sent_i] / len_hyp[sent_i],
+                    len_src[sent_i] / len_hyp[sent_i] if len_hyp[sent_i] != 0 else 0,
                     sent["h1_hx_bleu_avg"], sent["h1_hx_bleu_var"],
                     sent["hx_hx_bleu_avg"], sent["hx_hx_bleu_var"],
                 ]
