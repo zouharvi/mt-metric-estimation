@@ -1,87 +1,43 @@
 #!/usr/bin/env python3
 
-import os
 import json
 import argparse
-import random
-import utils
 import pickle
+import torch
+import tqdm
 import sys
 sys.path.append("src")
+import utils
 import me_zoo
+
+DEVICE = utils.get_device()
 
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument(
-        "-dt", "--data-train",
+        "-d", "--data",
         default="computed/en_de_human_metric_ft.jsonl"
     )
-    args.add_argument("-dd", "--data-dev", default=None)
     args.add_argument("-m", "--model", default="1hd75b10lin")
     args.add_argument("-f", "--fusion", type=int, default=None)
-    args.add_argument("--epochs", type=int, default=10)
-    args.add_argument("-dn", "--dev-n", type=int, default=None)
-    args.add_argument("-tn", "--train-n", type=int, default=None)
-    args.add_argument("--scale-metric", type=int, default=1)
-    args.add_argument("--shuffle-train", type=int, default=None)
+    args.add_argument("-dn", "--data-n", type=int, default=None)
     args.add_argument(
-        "-sb", "--save-bpe", default=None,
-        help="Store BPE model (path)"
-    )
-    args.add_argument(
-        "-lb", "--load-bpe", default=None,
+        "-lb", "--load-bpe", default="models/bpe_news_500k_h1.pkl",
         help="Load BPE model (path)"
     )
     # should have None default otherwise we always just fine-tune
     args.add_argument("-mp", "--model-load-path", default=None)
-    args.add_argument(
-        "-hn", "--hypothesis-n", type=int, default=1,
-        help="Has to be specified so that dev & train set is correct (when get_expand_hyp is used)"
-    )
     args.add_argument("--metric", default="bleu")
-    args.add_argument("--metric-dev", default=None)
-    args.add_argument("--save-metric", default="bleu")
     args.add_argument(
-        "-l", "--logfile",
-        default="logs/de_en_outroop.jsonl"
+        "-do", "--data-out",
+        default="computed/en_de_hs_f2_bleu.pkl"
     )
     args = args.parse_args()
 
     model, vocab_size = me_zoo.get_model(args)
 
-    if os.path.exists(args.logfile):
-        print("Logfile already exists, refusing to continue")
-        exit()
-
-    with open(args.data_train, "r") as f:
-        data_train = [json.loads(x) for x in f.readlines()]
-        data = data_train
-    if args.data_dev is not None:
-        with open(args.data_dev, "r") as f:
-            data_dev = [json.loads(x) for x in f.readlines()]
-
-        if args.dev_n is not None:
-            data_dev = data_dev[:args.dev_n]
-
-        if "human" in args.data_dev and args.dev_n != 1000:
-            print(
-                "You're using the human data but your dev-n is not 1k as described in the paper")
-            exit()
-
-        # data_dev is first
-        data = data_dev + data_train
-        args.dev_n = len(data_dev)
-    else:
-        if "human" in args.data_train and args.dev_n != 1000:
-            print(
-                "You're using the human data but your dev-n is not 1k as described in the paper")
-            exit()
-        if args.dev_n is None:
-            print("Unkown dev size specified")
-            exit()
-
-    if args.train_n is None:
-        args.train_n = len(data_train)
+    with open(args.data, "r") as f:
+        data = [json.loads(x) for x in f.readlines()][:args.data_n]
 
     # (src, ref, hyp, conf, bleu)
     data = [
@@ -92,56 +48,37 @@ if __name__ == "__main__":
         for sent in data
     ]
 
-    # skip for models that don't use BPE
-    if not args.model in {"b", "comet", "mbert"}:
-        if args.load_bpe is None:
-            encoder = utils.BPEEncoder(vocab_size)
-            encoder.fit([x["src+hyp"] for x in data])
-        else:
-            with open(args.load_bpe, "rb") as f:
-                encoder = pickle.load(f)
+    with open(args.load_bpe, "rb") as f:
+        encoder = pickle.load(f)
 
-        data_bpe = encoder.transform([x["src+hyp"] for x in data])
-        data = [
-            {"src+hyp_bpe": sent_bpe} | sent
-            for sent, sent_bpe in zip(data, data_bpe)
-        ]
-        if args.save_bpe is not None:
-            print("Saving BPE model to", args.save_bpe)
-            with open(args.save_bpe, "wb") as f:
-                pickle.dump(encoder, f)
+    data_bpe = encoder.transform([x["src+hyp"] for x in data])
+    data = [
+        {"src+hyp_bpe": sent_bpe} | sent
+        for sent, sent_bpe in zip(data, data_bpe)
+    ]
 
-    # the first 1k/10k is test
-    data_train = data[args.dev_n * args.hypothesis_n:]
-    # sample randomly
-    if args.shuffle_train is not None:
-        random.seed(args.shuffle_train)
-        random.shuffle(data_train)
-    data_train = data_train[:args.train_n * args.hypothesis_n]
-    # skip every n-th in the development part (take only the first)
-    data_dev = data[:args.dev_n * args.hypothesis_n:args.hypothesis_n]
+    print("Running inference")
+    data_pred = []
+    data_hs = []
+    data_y = []
+    batch = []
+    with torch.no_grad():
+        for sample_i, sent in enumerate(tqdm.tqdm(data)):
+            batch.append(sent)
 
-    # define logging function wrapper
-    def log_step(data):
-        with open(args.logfile, "a") as f:
-            f.write(json.dumps(data))
-            f.write("\n")
-        # flushes at the end
+            if len(batch) < model.batch_size:
+                continue
 
-    # set default evaluation metric
-    if args.metric_dev is None:
-        args.metric_dev = args.metric
-    print(f"Training model {args.model} with fusion {args.fusion}")
-    model.train_epochs(
-        data_train, data_dev,
-        epochs=args.epochs,
-        # disregarded for multi model
-        metric=args.metric, metric_dev=args.metric_dev,
-        logger=log_step,
-        # used only by the multi model
-        save_metric=args.save_metric,
-        save_path=(
-            args.logfile.replace("logs/", "models/").replace(".jsonl", ".pt")
-        ),
-        scale_metric=args.scale_metric,
-    )
+            score_pred, score_hs = model.forward(batch, output_hs=True)
+
+            score = torch.tensor(
+                [[sent["metrics"][args.metric]] for sent in batch], requires_grad=False
+            ).to(DEVICE)
+
+            data_pred += score_pred.reshape(-1).detach().cpu().numpy().tolist()
+            data_y += score.reshape(-1).detach().cpu().numpy().tolist()
+            data_hs += score_hs.detach().cpu().numpy().tolist()
+            batch = []
+
+    with open(args.data_out, "wb") as f:
+        pickle.dump(list(zip(data_pred, data_hs, data_y)), file=f)

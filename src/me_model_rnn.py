@@ -104,7 +104,7 @@ class MEModelRNN(torch.nn.Module):
         self.to(DEVICE)
 
 
-    def forward(self, sents):
+    def forward(self, sents, output_hs=False):
         local_batch_size = len(sents)
 
         # get gpu handle
@@ -131,12 +131,17 @@ class MEModelRNN(torch.nn.Module):
         if self.fusion in {1,2}:
             x = torch.hstack((x, x_extra))
 
+        hs = x
+
         x = self.regressor(x)
 
         # multiply final sigmoid output and center
         x = x * self.sigmoid_scale - self.sigmoid_offset
 
-        return x
+        if output_hs:
+            return (x, hs)
+        else:
+            return x
 
     def eval_dev(self, data_dev, metric, scale_metric=1):
         self.train(False)
