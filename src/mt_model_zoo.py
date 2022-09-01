@@ -1,11 +1,7 @@
-#!/usr/bin/env python3
-
-import argparse
-import tqdm
-import json
 import torch
+# if fairseq is not imported here, it's cythoned from hub which is less robust
+# possibly requires gcc >= 9.3.0?
 import fairseq
-from fairseq.models.fconv import FConvModel
 
 DEVICE = torch.device("cuda:0")
 
@@ -63,6 +59,13 @@ class FairSeqWrap():
                 checkpoint_file='wmt18.model1.pt:wmt18.model2.pt:wmt18.model3.pt:wmt18.model4.pt:wmt18.model5.pt:wmt18.model6.pt',
                 tokenizer='moses', bpe='subword_nmt'
             )
+        elif config.startswith("transformer.wmt19"):
+            self.model = torch.hub.load(
+                'pytorch/fairseq', config,
+                checkpoint_file='model1.pt:model2.pt:model3.pt:model4.pt',
+                tokenizer='moses', bpe='fastbpe',
+                verbose=False,
+            )
         else:
             self.model = torch.hub.load(
                 'pytorch/fairseq', config,
@@ -86,38 +89,5 @@ MODELS = {
     "w17c": lambda direction: FairSeqWrap(config=f"conv.wmt17.{direction}"),
     "w16t": lambda direction: FairSeqWrap(config=f"transformer.wmt16.{direction}"),
     "w18t": lambda direction: FairSeqWrap(config=f"transformer.wmt18.{direction}"),
+    "w19t": lambda direction: FairSeqWrap(config=f"transformer.wmt19.{direction}"),
 }
-
-if __name__ == "__main__":
-    args = argparse.ArgumentParser()
-    args.add_argument("-i", "--input", default="computed/en_de.jsonl")
-    args.add_argument("-o", "--output", default="computed/en_de_t5.jsonl")
-    args.add_argument("-dn", "--data-n", type=int, default=10000)
-    args.add_argument("-dir", "--direction", default="en-de")
-    args.add_argument("-m", "--model", default=None)
-    args = args.parse_args()
-
-    model = MODELS[args.model](args.direction)
-
-    with open(args.input, "r") as f:
-        data = [json.loads(x) for x in f.readlines()[:args.data_n]]
-
-    fout = open(args.output, "w")
-
-    print("Computing main loop")
-    for line_i, sent in enumerate(tqdm.tqdm(data)):
-        # translate 5 new hypotheses
-        sent["tgts"] = model.translate(sent["src"])
-
-        # the top one hypothesis is always the one with highest score but make sure
-        sent["tgts"] = sorted(sent["tgts"], key=lambda x: x[1], reverse=True)
-
-        # get first hypothesis
-        sent_tgt = sent["tgts"][0][0]
-
-        fout.write(json.dumps(sent, ensure_ascii=False) + "\n")
-
-        if line_i % 100 == 0:
-            fout.flush()
-
-    fout.close()

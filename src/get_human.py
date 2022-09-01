@@ -26,7 +26,7 @@ if __name__ == "__main__":
         "-i", "--input", nargs="+",
         default=[
             "computed/en_de_human_0.csv",
-            "computed/en_de_human_0.csv",
+            "computed/en_de_human_1.csv",
         ]
     )
     args.add_argument("--overwrite", action="store_true")
@@ -67,10 +67,6 @@ if __name__ == "__main__":
     fout = open(args.output, "w")
 
     for sent in tqdm.tqdm(data):
-        # header of a second file concatenated
-        if sent["score"] == "score":
-            continue
-
         total_sents += 1
         unique_sents.add(sent["src"] + " ||| " + sent["ref"])
 

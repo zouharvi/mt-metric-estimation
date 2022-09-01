@@ -6,19 +6,19 @@ import tqdm
 import argparse
 import os
 import json
-# if fairseq is not imported here, it's cythoned from hub which is less robust
-# possibly requires gcc >= 9.3.0?
-import fairseq
+from mt_model_zoo import MODELS
+
 
 DEVICE = torch.device("cuda:0")
 
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
-    args.add_argument("-o", "--output", default="computed/de_en.jsonl")
+    args.add_argument("-o", "--output", default="computed/en_de.jsonl")
     args.add_argument("--overwrite", action="store_true")
-    args.add_argument("--direction", default="de-en")
+    args.add_argument("--direction", default="en-de")
     args.add_argument("-ns", "--n-start", type=int, default=0)
     args.add_argument("-ne", "--n-end", type=int, default=1000)
+    args.add_argument("-m", "--model", default=None)
     args = args.parse_args()
 
     if os.path.exists(args.output) and not args.overwrite:
@@ -26,12 +26,7 @@ if __name__ == "__main__":
         print("Refusing to continue & exiting")
         exit()
 
-    model = torch.hub.load(
-        'pytorch/fairseq', f'transformer.wmt19.{args.direction}',
-        checkpoint_file='model1.pt:model2.pt:model3.pt:model4.pt',
-        tokenizer='moses', bpe='fastbpe',
-        verbose=False,
-    )
+    model = MODELS[args.model](args.direction)
 
     if args.direction == "de-en":
         src_lang = "de"
@@ -39,10 +34,6 @@ if __name__ == "__main__":
     elif args.direction == "en-de":
         src_lang = "en"
         tgt_lang = "de"
-    
-    # disable dropout
-    model.eval()
-    model = model.to(DEVICE)
 
     data = datasets.load_dataset("wmt14", "de-en")["train"]
 
@@ -54,11 +45,12 @@ if __name__ == "__main__":
     )):
         sent_src = sent[src_lang]
         sent_ref = sent[tgt_lang]
-        sent_src_enc = model.encode(sent_src)
 
-        sent_tgt_enc = model.generate(sent_src_enc, nbest=5)
-        sent_tgt = [(model.decode(x["tokens"]), x["score"].item()) for x in sent_tgt_enc]
-        # print(sent_tgt, sent_tgt_score, sent_tgt_enc.keys())
+        # translate 5 new hypotheses
+        sent_tgt = model.translate(sent_src)
+
+        # the top one hypothesis is always the one with highest score but make sure
+        sent_tgt = sorted(sent_tgt, key=lambda x: x[1], reverse=True)
 
         sent_line = {
             "src": sent_src,

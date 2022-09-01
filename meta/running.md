@@ -1,6 +1,10 @@
 
 |date|status|nickname|comment|command|
 |-|-|-|-|-|
+|09-01-2022|running||t5 0..4|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de -m t5 --n-start 000 --n-end 100 -o computed/en_de_t5_0.jsonl`|
+|09-01-2022|running||wmt17c 0..4|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de -m w17c --n-start 000 --n-end 100 -o computed/en_de_w17c_0.jsonl`|
+|09-01-2022|running||wmt16t 0..4|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de -m w16t --n-start 000 --n-end 100 -o computed/en_de_w16t_0.jsonl`|
+|09-01-2022|running||wmt16g 0..4|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de -m w16g --n-start 000 --n-end 100 -o computed/en_de_w16g_0.jsonl`|
 |08-31-2022|running||extract BLEU hs|`./src/extract_me_hidden_state.py -d computed/en_de_metric_ft.jsonl -f 2 -mp models/en_de_outroop_25_bleu_bleu.pt -do computed/en_de_hs_f2_bleu.pkl`|
 |08-31-2022|running|outroop_24|BLEU save|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_outroop_24_bleu_bleu_s.jsonl -f 0 -m 1hd75b10lin --metric bleu -dt computed/en_de_metric_ft.jsonl --dev-n 10000`|
 |08-31-2022|ok||t5, wmt16g, wmt17c, wmt16t|`./src/retranslate.py -m w17c -o computed/en_de_metric_w17c.jsonl; ./src/get_metric.py ...` |
