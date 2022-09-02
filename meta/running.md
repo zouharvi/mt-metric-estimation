@@ -1,12 +1,15 @@
 
 |date|status|nickname|comment|command|
 |-|-|-|-|-|
-|09-01-2022|running||t5 0..4|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de -m t5 --n-start 000 --n-end 100 -o computed/en_de_t5_0.jsonl`|
-|09-01-2022|running||wmt17c 0..4|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de -m w17c --n-start 000 --n-end 100 -o computed/en_de_w17c_0.jsonl`|
-|09-01-2022|running||wmt16t 0..4|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de -m w16t --n-start 000 --n-end 100 -o computed/en_de_w16t_0.jsonl`|
-|09-01-2022|running||wmt16g 0..4|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de -m w16g --n-start 000 --n-end 100 -o computed/en_de_w16g_0.jsonl`|
-|08-31-2022|running||extract BLEU hs|`./src/extract_me_hidden_state.py -d computed/en_de_metric_ft.jsonl -f 2 -mp models/en_de_outroop_25_bleu_bleu.pt -do computed/en_de_hs_f2_bleu.pkl`|
-|08-31-2022|running|outroop_24|BLEU save|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_outroop_24_bleu_bleu_s.jsonl -f 0 -m 1hd75b10lin --metric bleu -dt computed/en_de_metric_ft.jsonl --dev-n 10000`|
+|09-02-2022|running||t5, wmt17c, wmt16t, wmt16g 0..4|`bsub -W 24:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_${model}_${start_n}.jsonl -o computed/en_de_${model}_${start_n}_metric.jsonl`|
+|09-02-2022|running|jurel_1|fluency estimation|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_jurel_1_bleu.jsonl -f 0 -m 1hd75b10lin --text-feature hyp --metric bleu -dt computed/en_de_metric_ft.jsonl --dev-n 10000`|
+|09-02-2022|running|jurel_0|complexity estimation|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_jurel_0_bleu.jsonl -f 0 -m 1hd75b10lin --text-feature src --metric bleu -dt computed/en_de_metric_ft.jsonl --dev-n 10000`|
+|09-01-2022|ok||t5 0..4|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de -m t5 --n-start 000 --n-end 100 -o computed/en_de_t5_0.jsonl`|
+|09-01-2022|ok||wmt17c 0..4|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de -m w17c --n-start 000 --n-end 100 -o computed/en_de_w17c_0.jsonl`|
+|09-01-2022|ok||wmt16t 0..4|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de -m w16t --n-start 000 --n-end 100 -o computed/en_de_w16t_0.jsonl`|
+|09-01-2022|ok||wmt16g 0..4|`bsub -W 48:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py --direction en-de -m w16g --n-start 000 --n-end 100 -o computed/en_de_w16g_0.jsonl`|
+|08-31-2022|ok||extract BLEU hs|`./src/extract_me_hidden_state.py -d computed/en_de_metric_ft.jsonl -f 2 -mp models/en_de_outroop_25_bleu_bleu.pt -do computed/en_de_hs_f2_bleu.pkl`|
+|08-31-2022|ok|outroop_24|BLEU save|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_outroop_24_bleu_bleu_s.jsonl -f 0 -m 1hd75b10lin --metric bleu -dt computed/en_de_metric_ft.jsonl --dev-n 10000`|
 |08-31-2022|ok||t5, wmt16g, wmt17c, wmt16t|`./src/retranslate.py -m w17c -o computed/en_de_metric_w17c.jsonl; ./src/get_metric.py ...` |
 |08-30-2022|ok|zepole_0|MBERT|`09-submit-mbert.sh`|
 |08-29-2022|ok|outroop_23_s|scaled BLEU & ChrF|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_outroop_23_bleu_bleu_s_scaled.jsonl -f 1 -m 1hd75b10lin --metric bleu -dt computed/en_de_metric_ft.jsonl --dev-n 10000 --scale-metric 100`|
@@ -18,7 +21,7 @@
 |08-28-2022|ok|outroop_25|x->x (fusion 2, metrics)|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_outroop_25_bleu_bleu.jsonl -f 2 -m 1hd75b10lin --metric bleu --metric-dev bleu -dt computed/en_de_metric.jsonl --dev-n 10000`|
 |08-28-2022|ok|outroop_{23,24}_news|zscore|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_outroop_23_zscore_zscore_r_news.jsonl -f 1 -m 1hd75b10lin --metric bleu --metric-dev bleu -dt computed/en_de_human_metric.jsonl --dev-n 1000 --epochs 110  -lb models/bpe_news_500k_h1.pkl`|
 |08-27-2022|ok|windrose_0|finetuning (all metrics)|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" ./src/run_me_model.py -f 1 --dev-n 1000 -dt computed/en_de_human_metric_fixed.jsonl -lb models/bpe_news_500k_h1.pkl -mp models/en_de_outroop_23_bleu_bleu_s.pt --metric zscore --metric-dev zscore -l logs/en_de_windrose_0_bleu.jsonl --epochs 1000`|
-|08-27-2022|running||metrics h4|`bsub -W 120:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_h4.jsonl -o computed/en_de_h4_metric.jsonl`|
+|08-27-2022|ok||metrics h4|`bsub -W 120:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_h4.jsonl -o computed/en_de_h4_metric.jsonl`|
 |08-27-2022|ok||metrics h3|`bsub -W 120:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_h3.jsonl -o computed/en_de_h3_metric.jsonl`|
 |08-27-2022|ok||metrics h5 (longer)|`bsub -W 120:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_h5.jsonl -o computed/en_de_h5l_metric.jsonl`|
 |08-27-2022|ok (removed)|outroop_23_r|zscore|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_outroop_23_zscore_zscore_r.jsonl -f 1 -m 1hd75b10lin --metric bleu --metric-dev bleu -dt computed/en_de_human_metric.jsonl --dev-n 1000 --epochs 110`|
@@ -32,7 +35,7 @@
 |08-26-2022|killed||metrics h5|`bsub -W 24:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_h5.jsonl -o computed/en_de_h5_metric.jsonl`|
 |08-26-2022|ok|dwile_1|bleu limited data|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_dwile_0_1k.jsonl -m b --metric bleu --metric-dev bleu -dt computed/en_de_metric.jsonl --dev-n 10000 --train-n 1000`|
 |08-26-2022|ok|dwile_0|bleu limited data|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_dwile_0_1k.jsonl -f 1 -m 1hd75b10lin --metric bleu --metric-dev bleu -dt computed/en_de_metric.jsonl --dev-n 10000 --train-n 1000`|
-|08-26-2022|running|outroop_24|x -> x (zscore 1k, others 10k)|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_outroop_23_bleu_bleu.jsonl -f 0 -m 1hd75b10lin --metric bleu --metric-dev bleu -dt computed/en_de_metric.jsonl --dev-n 10000`|
+|08-26-2022|ok|outroop_24|x -> x (zscore 1k, others 10k)|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_outroop_23_bleu_bleu.jsonl -f 0 -m 1hd75b10lin --metric bleu --metric-dev bleu -dt computed/en_de_metric.jsonl --dev-n 10000`|
 |08-26-2022|ok|hopsack_1 me data||`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_hopsack_1.jsonl -m comet -dt computed/en_de_metric.jsonl --dev-n 10000`|
 |08-26-2022|ok (accidentially on 1k human?)|outroop_23|x -> x (non zscore)|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_outroop_23_bleu_bleu.jsonl -f 1 -m 1hd75b10lin --metric bleu --metric-dev bleu -dt computed/en_de_metric.jsonl --dev-n 10000`|
 |08-26-2022|ok|outroop_23|bleu,comet,zscore -> zscore|`bsub -W 12:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_outroop_23_comet_zscore.jsonl -f 1 -m 1hd75b10lin --metric comet --metric-dev zscore -dt computed/en_de_human_metric.jsonl --dev-n 1000`|

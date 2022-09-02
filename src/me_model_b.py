@@ -62,8 +62,8 @@ class MEModelBaseline():
                 model = LinearRegression()
 
                 x_train = tfidf.fit_transform(
-                    [sent["src+hyp"] for sent in data_train])
-                x_dev = tfidf.fit_transform([sent["src+hyp"] for sent in data_dev])
+                    [sent["text"] for sent in data_train])
+                x_dev = tfidf.fit_transform([sent["text"] for sent in data_dev])
                 model.fit(x_train, y_train)
 
                 ypred_train = model.predict(x_train)
@@ -85,10 +85,10 @@ class MEModelBaseline():
                 # TFIDF too large mismatch
 
         ypred_train = [
-            sent["src+hyp"].strip().count(" ")
+            sent["text"].strip().count(" ")
             for sent in data_train
         ]
         ypred_dev = [
-            sent["src+hyp"].strip().count(" ")
+            sent["text"].strip().count(" ")
             for sent in data_dev
         ]

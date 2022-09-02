@@ -47,7 +47,7 @@ class MEModelMBERT(torch.nn.Module):
         local_batch_size = len(sents)
 
         x = self.tokenizer.batch_encode_plus(
-            [sent["src+hyp"] for sent in sents],
+            [sent["text"] for sent in sents],
             add_special_tokens=True,  # Add '[CLS]' and '[SEP]'
             padding="longest",
             # we pad to longest but don't go over maximum total tokens

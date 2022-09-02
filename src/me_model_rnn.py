@@ -110,7 +110,7 @@ class MEModelRNN(torch.nn.Module):
         # get gpu handle
         x = [
             torch.nn.functional.one_hot(
-                torch.tensor(sent["src+hyp_bpe"]), num_classes=self.vocab_size
+                torch.tensor(sent["text_bpe"]), num_classes=self.vocab_size
             ).float().to(DEVICE) for sent in sents
         ]
         x = torch.nn.utils.rnn.pad_sequence(x, batch_first=True)

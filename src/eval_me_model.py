@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
     data = [
         sent | {
-            "src+hyp": sent["src"] + " [SEP] " + sent["tgts"][0][0],
+            "text": sent["src"] + " [SEP] " + sent["tgts"][0][0],
             "hyp": sent["tgts"][0][0],
         }
         for sent in data
@@ -59,9 +59,9 @@ if __name__ == "__main__":
     with open(args.load_bpe, "rb") as f:
         encoder = pickle.load(f)
 
-    data_bpe = encoder.transform([x["src+hyp"] for x in data])
+    data_bpe = encoder.transform([x["text"] for x in data])
     data = [
-        {"src+hyp_bpe": sent_bpe} | sent
+        {"text_bpe": sent_bpe} | sent
         for sent, sent_bpe in zip(data, data_bpe)
     ]
 
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         for sent, y_pred_val in zip(data, y_pred):
             if "metrics_pred" not in sent:
                 sent["metrics_pred"] = {}
-            sent.pop("src+hyp")
-            sent.pop("src+hyp_bpe")
+            sent.pop("text")
+            sent.pop("text_bpe")
             sent["metrics_pred"][args.metric] = y_pred_val
             fout.write(json.dumps(sent, ensure_ascii=False) + "\n")

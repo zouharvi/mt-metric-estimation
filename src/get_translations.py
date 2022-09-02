@@ -18,7 +18,7 @@ if __name__ == "__main__":
     args.add_argument("--direction", default="en-de")
     args.add_argument("-ns", "--n-start", type=int, default=0)
     args.add_argument("-ne", "--n-end", type=int, default=1000)
-    args.add_argument("-m", "--model", default=None)
+    args.add_argument("-m", "--model", default="w19t")
     args = args.parse_args()
 
     if os.path.exists(args.output) and not args.overwrite:
@@ -28,14 +28,21 @@ if __name__ == "__main__":
 
     model = MODELS[args.model](args.direction)
 
-    if args.direction == "de-en":
-        src_lang = "de"
-        tgt_lang = "en"
-    elif args.direction == "en-de":
-        src_lang = "en"
-        tgt_lang = "de"
+    print("Testing translate capabilities")
+    print("hello?", model.translate("Hello"))
 
-    data = datasets.load_dataset("wmt14", "de-en")["train"]
+    langs = args.direction.split("-")
+    src_lang = langs[0]
+    tgt_lang = langs[1]
+    if args.direction in {"de-en", "en-de"}:
+        dataset_name = "de-en"
+    elif args.direction in {"ru-en", "en-ru"}:
+        dataset_name = "ru-en"
+    elif args.direction in {"fr-en", "en-fr"}:
+        dataset_name = "fr-en"
+
+    data = datasets.load_dataset("wmt14", dataset_name)["train"]
+    print("Total available", len(data))
 
     f = open(args.output, "w")
 

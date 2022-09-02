@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     data = [
         sent | {
-            "src+hyp": sent["src"] + " [SEP] " + sent["tgts"][0][0],
+            "text": sent["src"] + " [SEP] " + sent["tgts"][0][0],
             "hyp": sent["tgts"][0][0],
         }
         for sent in data
@@ -46,9 +46,9 @@ if __name__ == "__main__":
     with open(args.bpe_path, "rb") as f:
         encoder = pickle.load(f)
 
-    data_bpe = encoder.transform([x["src+hyp"] for x in data])
+    data_bpe = encoder.transform([x["text"] for x in data])
     data = [
-        {"src+hyp_bpe": sent_bpe} | sent
+        {"text_bpe": sent_bpe} | sent
         for sent, sent_bpe in zip(data, data_bpe)
     ]
 
@@ -73,11 +73,11 @@ if __name__ == "__main__":
     i = 0
     while len(presented) < args.samples:
         sent = pred_all[i][2]
-        if sent["src+hyp"] in presented:
+        if sent["text"] in presented:
             i += 1
             continue
         i += 1
-        presented.add(sent["src+hyp"])
+        presented.add(sent["text"])
         print_example(pred_all[i])
     print("\n" + "="*10 + "\n")
 
@@ -85,9 +85,9 @@ if __name__ == "__main__":
     i = 0
     while len(presented) < args.samples:
         sent = pred_all[-i][2]
-        if sent["src+hyp"] in presented:
+        if sent["text"] in presented:
             i += 1
             continue
         i += 1
-        presented.add(sent["src+hyp"])
+        presented.add(sent["text"])
         print_example(pred_all[-i])

@@ -90,4 +90,6 @@ MODELS = {
     "w16t": lambda direction: FairSeqWrap(config=f"transformer.wmt16.{direction}"),
     "w18t": lambda direction: FairSeqWrap(config=f"transformer.wmt18.{direction}"),
     "w19t": lambda direction: FairSeqWrap(config=f"transformer.wmt19.{direction}"),
+    "w20t": lambda direction: FairSeqWrap(config=f"transformer.wmt20.{direction}"),
+    "xmt": lambda direction: FairSeqWrap(config=f"xm_transformer_600m-{direction.replace('-', '_')}-multi_domain"),
 }

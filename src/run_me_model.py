@@ -41,6 +41,7 @@ if __name__ == "__main__":
     args.add_argument("--metric", default="bleu")
     args.add_argument("--metric-dev", default=None)
     args.add_argument("--save-metric", default="bleu")
+    args.add_argument("--text-feature", default="src+hyp")
     args.add_argument(
         "-l", "--logfile",
         default="logs/de_en_outroop.jsonl"
@@ -83,10 +84,17 @@ if __name__ == "__main__":
     if args.train_n is None:
         args.train_n = len(data_train)
 
+    if args.text_feature == "src+hyp":
+        extractor = lambda sent: sent["src"] + " [SEP] " + sent["tgts"][0][0]
+    elif args.text_feature == "src":
+        extractor = lambda sent: sent["src"]
+    elif args.text_feature == "hyp":
+        extractor = lambda sent: sent["tgts"][0][0]
+
     # (src, ref, hyp, conf, bleu)
     data = [
         sent | {
-            "src+hyp": sent["src"] + " [SEP] " + sent["tgts"][0][0],
+            "text": extractor(sent),
             "hyp": sent["tgts"][0][0],
         }
         for sent in data
@@ -96,21 +104,21 @@ if __name__ == "__main__":
     if not args.model in {"b", "comet", "mbert"}:
         if args.load_bpe is None:
             encoder = utils.BPEEncoder(vocab_size)
-            encoder.fit([x["src+hyp"] for x in data])
+            encoder.fit([x["text"] for x in data])
         else:
             with open(args.load_bpe, "rb") as f:
                 encoder = pickle.load(f)
 
-        data_bpe = encoder.transform([x["src+hyp"] for x in data])
+        data_bpe = encoder.transform([x["text"] for x in data])
         data = [
-            {"src+hyp_bpe": sent_bpe} | sent
+            {"text_bpe": sent_bpe} | sent
             for sent, sent_bpe in zip(data, data_bpe)
         ]
         if args.save_bpe is not None:
             print("Saving BPE model to", args.save_bpe)
             with open(args.save_bpe, "wb") as f:
                 pickle.dump(encoder, f)
-
+    
     # the first 1k/10k is test
     data_train = data[args.dev_n * args.hypothesis_n:]
     # sample randomly
