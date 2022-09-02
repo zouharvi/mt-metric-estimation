@@ -16,11 +16,12 @@ if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument(
         "-d", "--data",
-        default="computed/en_de_human_metric_ft.jsonl"
+        default="computed/en_de_metric_ft.jsonl"
     )
     args.add_argument("-m", "--model", default="1hd75b10lin")
     args.add_argument("-f", "--fusion", type=int, default=None)
     args.add_argument("-dn", "--data-n", type=int, default=None)
+    args.add_argument("--no-dropout", action="store_true")
     args.add_argument(
         "-lb", "--load-bpe", default="models/bpe_news_500k_h1.pkl",
         help="Load BPE model (path)"
@@ -33,6 +34,9 @@ if __name__ == "__main__":
         default="computed/en_de_hs_f2_bleu.pkl"
     )
     args = args.parse_args()
+
+    if args.model == "1hd75b10lind20" and args.no_dropout:
+        print("Mismatch between --model and --no-dropout")
 
     model, vocab_size = me_zoo.get_model(args)
 
@@ -56,6 +60,13 @@ if __name__ == "__main__":
         {"text_bpe": sent_bpe} | sent
         for sent, sent_bpe in zip(data, data_bpe)
     ]
+
+    if not args.no_dropout:
+        # multiply 50 times
+        data = [sent for sent in data for _ in range(50)]
+    else:
+        # turn dropout off
+        model.eval()
 
     print("Running inference")
     data_pred = []

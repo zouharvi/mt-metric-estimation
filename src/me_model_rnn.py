@@ -8,41 +8,8 @@ import numpy as np
 
 DEVICE = utils.get_device()
 
-def compute_extra_vector(sents, fusion):
-    if fusion == 1:
-        len_src = [len(sent["src"].split()) for sent in sents]
-        len_hyp = [len(sent["hyp"].split()) for sent in sents]
-        x_extra = torch.tensor(
-            [
-                [
-                    sent["conf"], np.exp(sent["conf"]),
-                    len_src[sent_i], len_hyp[sent_i],
-                    len_src[sent_i] - len_hyp[sent_i],
-                    len_src[sent_i] / len_hyp[sent_i],
-                ]
-                for sent_i, sent in enumerate(sents)
-            ],
-            dtype=torch.float32
-        ).to(DEVICE)
-        return x_extra
-    elif fusion == 2:
-        len_src = [len(sent["src"].split()) for sent in sents]
-        len_hyp = [len(sent["hyp"].split()) for sent in sents]
-        x_extra = torch.tensor(
-            [
-                [
-                    sent["conf"], np.exp(sent["conf"]),
-                    len_src[sent_i], len_hyp[sent_i],
-                    len_src[sent_i] - len_hyp[sent_i],
-                    len_src[sent_i] / len_hyp[sent_i] if len_hyp[sent_i] != 0 else 0,
-                    sent["h1_hx_bleu_avg"], sent["h1_hx_bleu_var"],
-                    sent["hx_hx_bleu_avg"], sent["hx_hx_bleu_var"],
-                ]
-                for sent_i, sent in enumerate(sents)
-            ],
-            dtype=torch.float32
-        ).to(DEVICE)
-        return x_extra
+
+
 
 class MEModelRNN(torch.nn.Module):
     def __init__(
@@ -77,6 +44,11 @@ class MEModelRNN(torch.nn.Module):
             extra_features += 6
         elif fusion == 2:
             extra_features += 10
+        elif fusion == 3:
+            extra_features += 10 + 768
+            # load bert only if needed
+            from mbert_wrap import get_mbert_representations
+            self.get_mbert_representations = get_mbert_representations
 
         self.final_hidden_dropout = torch.nn.Dropout(p=final_hidden_dropout)
 
@@ -91,7 +63,7 @@ class MEModelRNN(torch.nn.Module):
             torch.nn.Linear(100, 1),
             torch.nn.Sigmoid() if sigmoid else torch.nn.Identity(),
         )
-        
+
         if load_path is not None:
             print("Loading model")
             self.load_state_dict(torch.load(load_path))
@@ -102,7 +74,6 @@ class MEModelRNN(torch.nn.Module):
 
         # move to GPU
         self.to(DEVICE)
-
 
     def forward(self, sents, output_hs=False):
         local_batch_size = len(sents)
@@ -115,8 +86,8 @@ class MEModelRNN(torch.nn.Module):
         ]
         x = torch.nn.utils.rnn.pad_sequence(x, batch_first=True)
 
-
-        x_extra = compute_extra_vector(sents, self.fusion)
+        if self.fusion != 0:
+            x_extra = self.compute_extra_vector(sents, self.fusion)
 
         x = self.embd(x)
         x = self.encoder(x)
@@ -128,12 +99,12 @@ class MEModelRNN(torch.nn.Module):
         # apply large dropout on the hidden state
         x = self.final_hidden_dropout(x)
 
-        if self.fusion in {1,2}:
+        if self.fusion in {1, 2, 3}:
             x = torch.hstack((x, x_extra))
 
-        hs = x
-
         x = self.regressor(x)
+        
+        hs = x
 
         # multiply final sigmoid output and center
         x = x * self.sigmoid_scale - self.sigmoid_offset
@@ -159,7 +130,7 @@ class MEModelRNN(torch.nn.Module):
                 score_pred = self.forward(batch)
 
                 score = torch.tensor(
-                    [[sent["metrics"][metric]*scale_metric] for sent in batch], requires_grad=False
+                    [[sent["metrics"][metric] * scale_metric] for sent in batch], requires_grad=False
                 ).to(DEVICE)
                 loss = self.loss_fn(score_pred, score)
 
@@ -200,7 +171,7 @@ class MEModelRNN(torch.nn.Module):
                 score_pred = self.forward(batch)
 
                 score = torch.tensor(
-                    [[sent["metrics"][metric]*scale_metric] for sent in batch], requires_grad=False
+                    [[sent["metrics"][metric] * scale_metric] for sent in batch], requires_grad=False
                 ).to(DEVICE)
                 loss = self.loss_fn(score_pred, score)
 
@@ -242,5 +213,61 @@ class MEModelRNN(torch.nn.Module):
             if "save_path" in kwargs is not None:
                 if abs(dev_corr) > abs(best_dev_corr):
                     best_dev_corr = dev_corr
-                    print(f"Saving model because new dev_corr is {dev_corr:.3f}")
+                    print(
+                        f"Saving model because new dev_corr is {dev_corr:.3f}")
                     torch.save(self.state_dict(), kwargs["save_path"])
+
+
+    def compute_extra_vector(self, sents, fusion):
+        len_src = [len(sent["src"].split()) for sent in sents]
+        len_hyp = [len(sent["hyp"].split()) for sent in sents]
+        if fusion == 1:
+            x_extra_1 = torch.tensor(
+                [
+                    [
+                        sent["conf"], np.exp(sent["conf"]),
+                        len_src[sent_i], len_hyp[sent_i],
+                        len_src[sent_i] - len_hyp[sent_i],
+                        len_src[sent_i] / len_hyp[sent_i],
+                    ]
+                    for sent_i, sent in enumerate(sents)
+                ],
+                dtype=torch.float32
+            ).to(DEVICE)
+            return x_extra_1
+        elif fusion == 2:
+            x_extra_1 = torch.tensor(
+                [
+                    [
+                        sent["conf"], np.exp(sent["conf"]),
+                        len_src[sent_i], len_hyp[sent_i],
+                        len_src[sent_i] - len_hyp[sent_i],
+                        len_src[sent_i] /
+                        len_hyp[sent_i] if len_hyp[sent_i] != 0 else 0,
+                        sent["h1_hx_bleu_avg"], sent["h1_hx_bleu_var"],
+                        sent["hx_hx_bleu_avg"], sent["hx_hx_bleu_var"],
+                    ]
+                    for sent_i, sent in enumerate(sents)
+                ],
+                dtype=torch.float32
+            ).to(DEVICE)
+            return x_extra_1
+        elif fusion == 3:
+            x_extra_1 = torch.tensor(
+                [
+                    [
+                        sent["conf"], np.exp(sent["conf"]),
+                        len_src[sent_i], len_hyp[sent_i],
+                        len_src[sent_i] - len_hyp[sent_i],
+                        len_src[sent_i] /
+                        len_hyp[sent_i] if len_hyp[sent_i] != 0 else 0,
+                        sent["h1_hx_bleu_avg"], sent["h1_hx_bleu_var"],
+                        sent["hx_hx_bleu_avg"], sent["hx_hx_bleu_var"],
+                    ]
+                    for sent_i, sent in enumerate(sents)
+                ],
+                dtype=torch.float32
+            ).to(DEVICE)
+            x_extra_2 = self.get_mbert_representations(sents)
+            x_extra = torch.hstack((x_extra_1, x_extra_2))
+            return x_extra

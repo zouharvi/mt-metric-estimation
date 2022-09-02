@@ -5,6 +5,7 @@ import fairseq
 
 DEVICE = torch.device("cuda:0")
 
+
 class T5ModelWrap():
     def __init__(self, direction):
         from transformers import T5Tokenizer, T5ForConditionalGeneration
@@ -15,7 +16,7 @@ class T5ModelWrap():
             self.task_prefix = "translate English to German: "
         else:
             self.task_prefix = "translate German to English: "
-        
+
         self.model.eval()
         self.model.to(DEVICE)
 
@@ -31,24 +32,21 @@ class T5ModelWrap():
             num_return_sequences=5,
             num_beams=5,
             max_length=512,
+            return_dict_in_generate=True,
+            output_scores=True,
         )
 
         outs = []
-        for hyp in outputs:
+        for hyp, hyp_score in zip(outputs[0], outputs[1]):
             decoded = self.tokenizer.decode(
                 hyp,
-                skip_special_tokens=False,
+                skip_special_tokens=True,
             )
-            # we could extract the probability in the generation step but there were some issues
-            # this duplicates the computation but does not matter much because it's just for eval
-            decoded = decoded.replace("<pad>", "").strip().rstrip("</s>")
-            output_ids = self.tokenizer.encode(decoded, return_tensors="pt")
-            output_ids = output_ids.to(DEVICE)
-            output_score = -self.model(input_ids, labels=output_ids)[0].item()
 
-            outs.append([decoded, output_score])
+            outs.append([decoded, -hyp_score.cpu().item()])
 
         return outs
+
 
 class FairSeqWrap():
     def __init__(self, config):
@@ -79,8 +77,45 @@ class FairSeqWrap():
     def translate(self, sent_src):
         sent_src_enc = self.model.encode(sent_src)
         sent_tgt_enc = self.model.generate(sent_src_enc, nbest=5)
-        sent_tgt = [(self.model.decode(x["tokens"]), x["score"].item()) for x in sent_tgt_enc]
+        sent_tgt = [(self.model.decode(x["tokens"]), x["score"].item())
+                    for x in sent_tgt_enc]
         return sent_tgt
+
+
+class HelsinkiWrap():
+    def __init__(self, config):
+        from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            f"Helsinki-NLP/{config}"
+        )
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(
+            f"Helsinki-NLP/{config}"
+        )
+        self.model.to(DEVICE)
+
+    def translate(self, sent_src):
+        inputs = self.tokenizer(
+            sent_src,
+            return_tensors="pt"
+        ).to(DEVICE)
+        outputs = self.model.generate(
+            **inputs,
+            num_beams=5,
+            num_return_sequences=5,
+            return_dict_in_generate=True,
+            output_scores=True,
+        )
+
+        outs = []
+        for i in range(5):
+            trans = self.tokenizer.decode(
+                outputs[0][i],
+                skip_special_tokens=True
+            )
+            score = -outputs[1][i].cpu().item()
+            outs.append([trans, score])
+        return outs
+
 
 MODELS = {
     "t5": T5ModelWrap,
@@ -91,5 +126,5 @@ MODELS = {
     "w18t": lambda direction: FairSeqWrap(config=f"transformer.wmt18.{direction}"),
     "w19t": lambda direction: FairSeqWrap(config=f"transformer.wmt19.{direction}"),
     "w20t": lambda direction: FairSeqWrap(config=f"transformer.wmt20.{direction}"),
-    "xmt": lambda direction: FairSeqWrap(config=f"xm_transformer_600m-{direction.replace('-', '_')}-multi_domain"),
+    "helsinki": lambda direction: HelsinkiWrap(config=f"opus-mt-{direction}"),
 }

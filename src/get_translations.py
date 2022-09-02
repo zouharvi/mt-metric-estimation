@@ -11,14 +11,49 @@ from mt_model_zoo import MODELS
 
 DEVICE = torch.device("cuda:0")
 
+DATASET_MAP = {
+    "en-de": "wmt14",
+    "de-en": "wmt14",
+    "en-fr": "wmt14",
+    "fr-en": "wmt14",
+    "en-ru": "wmt14",
+    "ru-en": "wmt14",
+    "en-zh": "ccmatrix",
+    "zh-en": "ccmatrix",
+    "en-hi": "ccmatrix",
+    "hi-en": "ccmatrix",
+    "pl-de": "opus_paracrawl",
+    "de-pl": "opus_paracrawl",
+}
+
+def get_dataset(direction):
+    name = DATASET_MAP[direction]
+    if name == "wmt14":
+        if direction in {"de-en", "en-de"}:
+            return datasets.load_dataset("wmt14", "de-en")["train"]
+        elif direction in {"ru-en", "en-ru"}:
+            return datasets.load_dataset("wmt14", "ru-en")["train"]
+        elif direction in {"fr-en", "en-fr"}:
+            return datasets.load_dataset("wmt14", "fr-en")["train"]
+    elif name == "ccmatrix":
+        if direction in {"zh-en", "en-zh"}:
+            return datasets.load_dataset("yhavinga/ccmatrix", lang1="en", lang2="zh")["train"]
+        elif direction in {"hi-en", "hi-zh"}:
+            return datasets.load_dataset("yhavinga/ccmatrix", lang1="en", lang2="hi")["train"]
+    elif name == "opus_paracrawl":
+        if direction in {"pl-de", "de-pl"}:
+            return datasets.load_dataset("opus_paracrawl", "de-pl")["train"]
+
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument("-o", "--output", default="computed/en_de.jsonl")
     args.add_argument("--overwrite", action="store_true")
-    args.add_argument("--direction", default="en-de")
     args.add_argument("-ns", "--n-start", type=int, default=0)
     args.add_argument("-ne", "--n-end", type=int, default=1000)
     args.add_argument("-m", "--model", default="w19t")
+    args.add_argument("--direction", default="en-de")
+    args.add_argument("--dry-dataset", action="store_true", help="Only download the model & data")
+    args.add_argument("--dry-model", action="store_true", help="Only download the model")
     args = args.parse_args()
 
     if os.path.exists(args.output) and not args.overwrite:
@@ -31,18 +66,18 @@ if __name__ == "__main__":
     print("Testing translate capabilities")
     print("hello?", model.translate("Hello"))
 
+    if args.dry_model:
+        exit()
+
     langs = args.direction.split("-")
     src_lang = langs[0]
     tgt_lang = langs[1]
-    if args.direction in {"de-en", "en-de"}:
-        dataset_name = "de-en"
-    elif args.direction in {"ru-en", "en-ru"}:
-        dataset_name = "ru-en"
-    elif args.direction in {"fr-en", "en-fr"}:
-        dataset_name = "fr-en"
-
-    data = datasets.load_dataset("wmt14", dataset_name)["train"]
+    
+    data = get_dataset(args.dataset, args.direction)
     print("Total available", len(data))
+
+    if args.dry_dataset:
+        exit()
 
     f = open(args.output, "w")
 
