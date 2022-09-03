@@ -52,7 +52,7 @@ class FairSeqWrap():
     def __init__(self, config):
         print("loading", config)
         if config.startswith("transformer.wmt18"):
-            torch.hub.load(
+            self.model = torch.hub.load(
                 'pytorch/fairseq', 'transformer.wmt18.en-de',
                 checkpoint_file='wmt18.model1.pt:wmt18.model2.pt:wmt18.model3.pt:wmt18.model4.pt:wmt18.model5.pt:wmt18.model6.pt',
                 tokenizer='moses', bpe='subword_nmt'

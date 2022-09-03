@@ -12,6 +12,8 @@ from mt_model_zoo import MODELS
 DEVICE = torch.device("cuda:0")
 
 DATASET_MAP = {
+    "en-cs": "wmt14",
+    "cs-en": "wmt14",
     "en-de": "wmt14",
     "de-en": "wmt14",
     "en-fr": "wmt14",
@@ -35,10 +37,12 @@ def get_dataset(direction):
             return datasets.load_dataset("wmt14", "ru-en")["train"]
         elif direction in {"fr-en", "en-fr"}:
             return datasets.load_dataset("wmt14", "fr-en")["train"]
+        elif direction in {"cs-en", "en-cs"}:
+            return datasets.load_dataset("wmt14", "cs-en")["train"]
     elif name == "ccmatrix":
         if direction in {"zh-en", "en-zh"}:
             return datasets.load_dataset("yhavinga/ccmatrix", lang1="en", lang2="zh")["train"]
-        elif direction in {"hi-en", "hi-zh"}:
+        elif direction in {"hi-en", "en-hi"}:
             return datasets.load_dataset("yhavinga/ccmatrix", lang1="en", lang2="hi")["train"]
     elif name == "opus_paracrawl":
         if direction in {"pl-de", "de-pl"}:
@@ -61,23 +65,28 @@ if __name__ == "__main__":
         print("Refusing to continue & exiting")
         exit()
 
+    if "ru" in args.direction:
+        # offset problematic part of the dataset
+        args.n_start += 20
+        args.n_end += 20
+
     model = MODELS[args.model](args.direction)
 
     print("Testing translate capabilities")
     print("hello?", model.translate("Hello"))
 
     if args.dry_model:
-        exit()
+        exit("Exiting gracefully")
 
     langs = args.direction.split("-")
     src_lang = langs[0]
     tgt_lang = langs[1]
     
-    data = get_dataset(args.dataset, args.direction)
+    data = get_dataset(args.direction)
     print("Total available", len(data))
 
     if args.dry_dataset:
-        exit()
+        exit("Exiting gracefully")
 
     f = open(args.output, "w")
 

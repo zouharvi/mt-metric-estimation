@@ -90,6 +90,10 @@ if __name__ == "__main__":
         extractor = lambda sent: sent["src"]
     elif args.text_feature == "hyp":
         extractor = lambda sent: sent["tgts"][0][0]
+    elif args.text_feature == "src+hyp+ref":
+        extractor = lambda sent: sent["src"] + " [SEP] " + sent["tgts"][0][0] + " [SEP] " + sent["ref"]
+    elif args.text_feature == "hyp+ref":
+        extractor = lambda sent: sent["tgts"][0][0] + " [SEP] " + sent["ref"]
 
     # (src, ref, hyp, conf, bleu)
     data = [

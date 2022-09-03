@@ -102,10 +102,15 @@ class MEModelRNN(torch.nn.Module):
         if self.fusion in {1, 2, 3}:
             x = torch.hstack((x, x_extra))
 
-        x = self.regressor(x)
+        if output_hs:
+            for layer_i, layer in enumerate(self.regressor):
+                if layer_i == 3:
+                    hs = x
+                x = layer(x)
+        else:
+            # faster
+            x = self.regressor(x)
         
-        hs = x
-
         # multiply final sigmoid output and center
         x = x * self.sigmoid_scale - self.sigmoid_offset
 

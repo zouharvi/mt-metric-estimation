@@ -16,7 +16,7 @@ if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument(
         "-d", "--data",
-        default="computed/en_de_metric_ft.jsonl"
+        default="computed/en_de_metric.jsonl"
     )
     args.add_argument("-m", "--model", default="1hd75b10lin")
     args.add_argument("-f", "--fusion", type=int, default=None)

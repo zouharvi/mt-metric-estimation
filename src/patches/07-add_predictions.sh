@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-# cp computed/en_de_metric_brt.jsonl computed/en_de_metric_pred.jsonl
+cp computed/en_de_metric.jsonl computed/en_de_metric_pred.jsonl
 cp computed/en_de_human_metric_brt.jsonl computed/en_de_human_metric_pred.jsonl
 
 for metric in bleu bleurt chrf ter meteor comet; do

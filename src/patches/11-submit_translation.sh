@@ -15,3 +15,7 @@ for start_n in 0 1 2 3 4; do
         #     -o computed/en_de_${model}_${start_n}_metric.jsonl
     done;
 done;
+
+# bsub -W 24:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py \
+#             -i computed/en_de_${model}_${start_n}.jsonl \
+#             -o computed/en_de_${model}_${start_n}_metric.jsonl

@@ -57,5 +57,5 @@ PRETTY_NAME = {
     "me_all": "ME all",
 
     "wmt21-comet-qe-mqm": "COMET-QE  ",
-    "zscore": "z-score",
+    "zscore": "human",
 }
