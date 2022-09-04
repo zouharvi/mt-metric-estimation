@@ -23,7 +23,7 @@ if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument(
         "-d", "--data",
-        default="computed/en_de_metric_brt.jsonl",
+        default="computed/en_de_metric.jsonl",
     )
     args.add_argument(
         "-dh", "--data-human",

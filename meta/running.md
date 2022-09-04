@@ -1,9 +1,10 @@
 
 |date|status|nickname|comment|command|
 |-|-|-|-|-|
+|09-04-2022|running||t5, wmt17c, wmt16t, wmt16g 0 (running 1..4)|`bsub -W 24:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_${model}_${start_n}.jsonl -o computed/en_de_${model}_${start_n}_metric.jsonl`|
+|09-03-2022|ok|trema_1|w16g, w16t, w17c, t5|`bsub -W 24:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_trema_1_${model}_bleu.jsonl -f 0 -m 1hd75b10lin --metric bleu -dt computed/en_de_${model}_metric.jsonl --dev-n 10000`|
 |09-03-2022|ok|trema_0|w16g, w16t, w17c, t5|`bsub -W 24:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_trema_0_${model}_bleu.jsonl -f 2 -m 1hd75b10lin --metric bleu -dt computed/en_de_${model}_metric.jsonl --dev-n 10000`|
 |09-03-2022|ok||get metric|w16g 0, w16t 0, w17c done, t5 done |
-|09-02-2022|running||t5, wmt17c, wmt16t, wmt16g 0 (todo run 1..4)|`bsub -W 24:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_${model}_${start_n}.jsonl -o computed/en_de_${model}_${start_n}_metric.jsonl`|
 |09-02-2022|ok||extract hidden state without dropout|`bsub -W 24:00 -n 8 -R "rusage[mem=5000,ngpus_excl_p=1]" ./src/extract_me_hidden_state.py -m 1hd75b10lin -f 2 -mp models/en_de_outroop_25_bleu_bleu.pt -do computed/en_de_hs_f2_bleu_nodropout.pkl --no-dropout`|
 |09-02-2022|ok||extract hidden state|`bsub -W 24:00 -n 8 -R "rusage[mem=20000,ngpus_excl_p=1]" ./src/extract_me_hidden_state.py -m 1hd75b10lind20 -f 2 -mp models/en_de_outroop_25_bleu_bleu.pt --data-n 10000`|
 |09-02-2022|ok|outroop_27|bert fusion|`bsub -W 24:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_outroop_27_bleu.jsonl -f 3 -m 1hd75b10lin --metric bleu -dt computed/en_de_metric_ft.jsonl --dev-n 10000`|
