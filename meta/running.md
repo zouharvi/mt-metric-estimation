@@ -1,7 +1,8 @@
 
 |date|status|nickname|comment|command|
 |-|-|-|-|-|
-|09-04-2022|running||t5, wmt17c, wmt16t, wmt16g 0 (running 1..4)|`bsub -W 24:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_${model}_${start_n}.jsonl -o computed/en_de_${model}_${start_n}_metric.jsonl`|
+|09-06-2022|running||get_metric t5, wmt17c, wmt16t, wmt16g 0..4|`bsub -W 24:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/${direction2}_${start_n}.jsonl -o computed/${direction2}_${start_n}_metric.jsonl`|
+|09-04-2022|ok||t5, wmt17c, wmt16t, wmt16g 0..4|`bsub -W 24:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_${model}_${start_n}.jsonl -o computed/en_de_${model}_${start_n}_metric.jsonl`|
 |09-03-2022|ok|trema_1|w16g, w16t, w17c, t5|`bsub -W 24:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_trema_1_${model}_bleu.jsonl -f 0 -m 1hd75b10lin --metric bleu -dt computed/en_de_${model}_metric.jsonl --dev-n 10000`|
 |09-03-2022|ok|trema_0|w16g, w16t, w17c, t5|`bsub -W 24:00 -n 8 -R "rusage[mem=3000,ngpus_excl_p=1]" python3 ./src/run_me_model.py -l logs/en_de_trema_0_${model}_bleu.jsonl -f 2 -m 1hd75b10lin --metric bleu -dt computed/en_de_${model}_metric.jsonl --dev-n 10000`|
 |09-03-2022|ok||get metric|w16g 0, w16t 0, w17c done, t5 done |
