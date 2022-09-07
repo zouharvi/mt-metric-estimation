@@ -19,6 +19,10 @@ if __name__ == "__main__":
         default=None
     )
     args.add_argument(
+        "-oc", "--output-corr",
+        default=None
+    )
+    args.add_argument(
         "-mp", "--model-load-path",
         default="models/en_de_outroop_25_bleu_bleu_s.pt"
     )
@@ -72,9 +76,22 @@ if __name__ == "__main__":
     )
     y_true = [sent["metrics"][args.metric] for sent in data]
 
+    # remove serious outliers that falsely improve the correlation
+    data_pred = [
+        (y_pred, y_true)
+        for y_pred, y_true in zip(y_pred, y_true)
+        if y_pred >= -10 and y_pred <= 10
+    ]
+    y_pred = [x[0] for x in data_pred]
+    y_true = [x[1] for x in data_pred]
+
     corr = np.corrcoef(y_pred, y_true)[0, 1]
 
     print(f"Correlation with {args.metric} is {corr:.2%}")
+
+    if args.output_corr is not None:
+        with open(args.output_corr, "w") as f:
+            f.write(json.dumps({"dev_corr": corr}))
 
     if args.output_data is not None:
         fout = open(args.output_data, "w")

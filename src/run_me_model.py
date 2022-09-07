@@ -32,6 +32,7 @@ if __name__ == "__main__":
         "-lb", "--load-bpe", default=None,
         help="Load BPE model (path)"
     )
+    args.add_argument("--save-bpe-only", action="store_true")
     # should have None default otherwise we always just fine-tune
     args.add_argument("-mp", "--model-load-path", default=None)
     args.add_argument(
@@ -50,7 +51,7 @@ if __name__ == "__main__":
 
     model, vocab_size = me_zoo.get_model(args)
 
-    if os.path.exists(args.logfile):
+    if os.path.exists(args.logfile) and not args.save_bpe_only:
         print("Logfile already exists, refusing to continue")
         exit()
 
@@ -122,6 +123,8 @@ if __name__ == "__main__":
             print("Saving BPE model to", args.save_bpe)
             with open(args.save_bpe, "wb") as f:
                 pickle.dump(encoder, f)
+            if args.save_bpe_only:
+                exit()
     
     # the first 1k/10k is test
     data_train = data[args.dev_n * args.hypothesis_n:]

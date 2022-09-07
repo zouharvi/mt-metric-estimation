@@ -3,7 +3,7 @@
 # for start_n in 0 1 2 3 4; do
 for start_n in 0 1 2 3 4; do
     end_n=$((start_n+1))
-    # for langs in de-en de-pl pl-de zh-en en-zh cs-en en-cs ru-en en-ru fr-en en-fr hi-en en-hi; do
+    # for direction in de-en de-pl pl-de zh-en en-zh cs-en en-cs ru-en en-ru fr-en en-fr hi-en en-hi; do
 
     # for direction in de-en; do
     #     direction2=${direction/-/_}
@@ -24,7 +24,7 @@ for start_n in 0 1 2 3 4; do
 
     # for direction in pl-de en-zh en-cs en-fr en-hi; do
     #     echo "Submitting ${direction} ${start_n}00:${end_n}00"
-    #     bsub -W 12:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py \
+    #     bsub -W 24:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_translations.py \
     #         --direction $direction \
     #         --dry-model \
     #         --model helsinki \
