@@ -142,7 +142,7 @@ if __name__ == "__main__":
                 # ("\n" if x_i % 2 else "") +
                 fig_utils.PRETTY_NAME[x["model"]]
                 for x_i, x in enumerate(data_local)
-            ] if metric_i == 2 else None,
+            ] if metric_i == 3 else None,
             width=1 / (len(METRICS) + 1.5),
             label=fig_utils.PRETTY_NAME[metric],
             edgecolor="black",
