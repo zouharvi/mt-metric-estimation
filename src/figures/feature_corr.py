@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import math
 import sys
 sys.path.append("src")
 from figures import fig_utils
@@ -23,7 +22,7 @@ if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument(
         "-d", "--data",
-        default="computed/en_de_metric.jsonl",
+        default="computed/en_de_metric_ft.jsonl",
     )
     args.add_argument(
         "-dh", "--data-human",
@@ -109,7 +108,7 @@ if __name__ == "__main__":
             if corr < 0:
                 ax.text(
                     metric_i + 0.3, key_x_i % THRESHOLD_X + 0.3,
-                    r"$\star$",
+                    "-",
                     color=get_color(abs(corr)),
                 )
 
@@ -135,7 +134,7 @@ if __name__ == "__main__":
         if corr < 0:
             ax.text(
                 len(METRICS) + 0.3, key_x_i % THRESHOLD_X + 0.3,
-                r"$\star$",
+                "-",
                 color=get_color(abs(corr)),
             )
 
