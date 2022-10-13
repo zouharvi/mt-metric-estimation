@@ -77,8 +77,24 @@ class FairSeqWrap():
     def translate(self, sent_src):
         sent_src_enc = self.model.encode(sent_src)
         sent_tgt_enc = self.model.generate(sent_src_enc, nbest=5)
-        sent_tgt = [(self.model.decode(x["tokens"]), x["score"].item())
-                    for x in sent_tgt_enc]
+        sent_tgt = [
+            (self.model.decode(x["tokens"]), x["score"].item())
+            for x in sent_tgt_enc
+        ]
+        return sent_tgt
+
+    def translate_deep(self, sent_src):
+        sent_src_enc = self.model.encode(sent_src)
+        sent_tgt_enc = self.model.generate(sent_src_enc, nbest=5)
+        print(sent_tgt_enc[0].keys())
+        print({k: type(v) for k,v in sent_tgt_enc[0].items()})
+        print("attention", sent_tgt_enc[0]["attention"].shape)
+        print("alignment", sent_tgt_enc[0]["alignment"].shape)
+        print("positional_scores", sent_tgt_enc[0]["positional_scores"].shape)
+        sent_tgt = [
+            (self.model.decode(x["tokens"]), x["score"].item())
+            for x in sent_tgt_enc
+        ]
         return sent_tgt
 
 
