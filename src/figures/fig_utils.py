@@ -1,4 +1,3 @@
-import matplotlib.style
 import matplotlib as mpl
 from cycler import cycler
 
@@ -50,7 +49,7 @@ PRETTY_NAME = {
     "|s|/|t|": "$|s|/|t|$",
 
     # models
-    "mbert": "MBERT",
+    "mbert": "mBERT",
     "tfidf": "LR TF-IDF",
     "lr_multi": "LR Multi",
     "me_text": "ME text",
