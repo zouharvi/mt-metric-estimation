@@ -1,6 +1,7 @@
 
 |date|status|nickname|comment|command|
 |-|-|-|-|-|
+|12-08-2022|to run|urbicide 1|TODO|`src/patches/21-run_xlmr.sh`|
 |09-07-2022|ok||merge jeren (same queue)|`bsub -W 24:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" ./src/patches/15-merge_jeren.sh`|
 |09-06-2022|ok||get_metric t5, wmt17c, wmt16t, wmt16g 0..4|`bsub -W 24:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/${direction2}_${start_n}.jsonl -o computed/${direction2}_${start_n}_metric.jsonl`|
 |09-04-2022|ok||t5, wmt17c, wmt16t, wmt16g 0..4|`bsub -W 24:00 -n 8 -R "rusage[mem=4000,ngpus_excl_p=1]" python3 ./src/get_metric.py -i computed/en_de_${model}_${start_n}.jsonl -o computed/en_de_${model}_${start_n}_metric.jsonl`|

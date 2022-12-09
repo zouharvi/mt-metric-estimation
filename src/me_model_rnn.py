@@ -8,9 +8,6 @@ import numpy as np
 
 DEVICE = utils.get_device()
 
-
-
-
 class MEModelRNN(torch.nn.Module):
     def __init__(
         self, vocab_size, embd_size, hidden_size, batch_size=1,
@@ -48,7 +45,12 @@ class MEModelRNN(torch.nn.Module):
             extra_features += 10 + 768
             # load bert only if needed
             from mbert_wrap import get_mbert_representations
-            self.get_mbert_representations = get_mbert_representations
+            self.get_extra_representations = get_mbert_representations
+        elif fusion == 4:
+            extra_features += 10 + 768
+            # load RoBERTa only if needed
+            from xlmr_wrap import get_xlmr_representations
+            self.get_extra_representations = get_xlmr_representations
 
         self.final_hidden_dropout = torch.nn.Dropout(p=final_hidden_dropout)
 
@@ -99,7 +101,7 @@ class MEModelRNN(torch.nn.Module):
         # apply large dropout on the hidden state
         x = self.final_hidden_dropout(x)
 
-        if self.fusion in {1, 2, 3}:
+        if self.fusion in {1, 2, 3, 4}:
             x = torch.hstack((x, x_extra))
 
         if output_hs:
@@ -257,7 +259,7 @@ class MEModelRNN(torch.nn.Module):
                 dtype=torch.float32
             ).to(DEVICE)
             return x_extra_1
-        elif fusion == 3:
+        elif fusion in {3,4}:
             x_extra_1 = torch.tensor(
                 [
                     [
@@ -273,6 +275,6 @@ class MEModelRNN(torch.nn.Module):
                 ],
                 dtype=torch.float32
             ).to(DEVICE)
-            x_extra_2 = self.get_mbert_representations(sents)
+            x_extra_2 = self.get_extra_representations(sents)
             x_extra = torch.hstack((x_extra_1, x_extra_2))
             return x_extra

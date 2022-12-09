@@ -22,6 +22,15 @@ def get_model(args):
             num_layers=2, dropout=0.0, final_hidden_dropout=0.75, batch_size=10,
             load_path=args.model_load_path,
         )
+    elif args.model in {"1hd75b5lin"}:
+        from me_model_rnn import MEModelRNN
+        vocab_size = 8192
+        model = MEModelRNN(
+            vocab_size, 512, 128, fusion=args.fusion,
+            sigmoid=False, relu=True,
+            num_layers=2, dropout=0.0, final_hidden_dropout=0.75, batch_size=5,
+            load_path=args.model_load_path,
+        )
     # used for calibration
     elif args.model == "1hd75b10lind20":
         from me_model_rnn import MEModelRNN
@@ -60,6 +69,9 @@ def get_model(args):
     elif args.model == "mbert":
         from me_model_mbert import MEModelMBERT
         model = MEModelMBERT(batch_size=10)
+    elif args.model == "xlmr":
+        from me_model_xlmr import MEModelXLMR
+        model = MEModelXLMR(batch_size=5)
     else:
         raise Exception("Unknown model")
 
