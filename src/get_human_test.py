@@ -18,26 +18,24 @@ def calculate_logprob(input_text, output_text, model, tokenizer):
     outputs = model(input_ids, labels=output_ids)
     return -outputs[0].item()
 
+
 if __name__ == "__main__":
 
     args = argparse.ArgumentParser()
     args.add_argument(
-        "-i", "--input", nargs="+",
-        default=[
-            "computed/en_de_human_train_0.csv",
-            "computed/en_de_human_train_1.csv",
-            "computed/en_de_human_train_2.csv",
-            # "computed/en_de_human_0.csv",
-            # "computed/en_de_human_1.csv",
-        ]
+        "-i1", "--input-src", default="/home/vilda/Downloads/en_de_test.src",
+    )
+    args.add_argument(
+        "-i2", "--input-tgt", default="/home/vilda/Downloads/en_de_test.tgt",
     )
     args.add_argument("--overwrite", action="store_true")
     args.add_argument("--direction", default="en-de")
-    args.add_argument("-o", "--output", default="computed/en_de_human.jsonl")
+    args.add_argument("-o", "--output", default="computed/en_de_human_test.jsonl")
     args = args.parse_args()
 
-    fins = [open(f, "r") for f in args.input]
-    data = itertools.chain(*[csv.DictReader(f) for f in fins])
+    f1 = open(args.input_src, "r").readlines()
+    f2 = open(args.input_tgt, "r").readlines()
+    data = [(x.rstrip("\n"), y.rstrip("\n")) for x, y in zip(f1, f2)]
 
     unique_sents = set()
     total_sents = 0
@@ -49,7 +47,7 @@ if __name__ == "__main__":
 
     tokenizer = T5Tokenizer.from_pretrained("t5-small")
     model = T5ForConditionalGeneration.from_pretrained("t5-small")
-    
+
     model.eval()
     model.to(DEVICE)
 
@@ -67,20 +65,20 @@ if __name__ == "__main__":
 
     fout = open(args.output, "w")
 
-    for sent in tqdm.tqdm(data):
+    for sent_src, sent_tgt in tqdm.tqdm(data):
         total_sents += 1
-        unique_sents.add(sent["src"] + " ||| " + sent["ref"])
+        unique_sents.add(sent_src)
 
         conf = calculate_logprob(
-            task_prefix + sent["src"], sent["mt"], model, tokenizer
+            task_prefix + sent_src, sent_tgt, model, tokenizer
         )
 
         sent_line = {
-            "src": sent["src"],
-            "ref": sent["ref"],
-            "tgts": [[sent["mt"], conf]],
-            "score": float(sent["score"]),
-            "zscore": float(sent["zscore"]),
+            "src": sent_src,
+            # "ref": sent["ref"],
+            "tgts": [[sent_tgt, conf]],
+            # "score": float(sent["score"]),
+            # "zscore": float(sent["zscore"]),
         }
         fout.write(json.dumps(sent_line, ensure_ascii=False))
         fout.write("\n")

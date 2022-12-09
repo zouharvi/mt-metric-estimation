@@ -34,7 +34,7 @@ class MEModelMBERT(torch.nn.Module):
         )
 
         if load_path is not None:
-            print("Loading model")
+            print("Loading model", load_path)
             self.load_state_dict(torch.load(load_path))
 
         self.loss_fn = torch.nn.MSELoss()

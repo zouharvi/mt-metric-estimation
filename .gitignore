@@ -1,6 +1,7 @@
 # Added by zouharvi
 *.bkp
 *.dtmp
+/outputs
 /computed
 /logs
 /models

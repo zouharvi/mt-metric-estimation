@@ -68,10 +68,10 @@ def get_model(args):
         model = MEModelComet()
     elif args.model == "mbert":
         from me_model_mbert import MEModelMBERT
-        model = MEModelMBERT(batch_size=10)
+        model = MEModelMBERT(batch_size=10, load_path=args.model_load_path)
     elif args.model == "xlmr":
         from me_model_xlmr import MEModelXLMR
-        model = MEModelXLMR(batch_size=5)
+        model = MEModelXLMR(batch_size=5, load_path=args.model_load_path)
     else:
         raise Exception("Unknown model")
 
