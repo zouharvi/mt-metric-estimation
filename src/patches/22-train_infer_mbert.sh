@@ -52,14 +52,32 @@ sbatch --time=4-0 --ntasks=8 --mem-per-cpu=3G --gpus=1 \
 metric=zscore
 echo "Submitting MBERT with $metric metric";
 sbatch --time=4-0 --ntasks=8 --mem-per-cpu=3G --gpus=1 \
-    --job-name="censer_3 (finetune)" \
-    --output="lsf_logs/censer_3.log" \
+    --job-name="censer_2f (finetune)" \
+    --output="lsf_logs/censer_2f.log" \
     --wrap="\
         python3 src/run_me_model.py \
         -m mbert --dev-n 1000 \
+        -mp models/en_de_censer_2_ter.pt \
         -dt computed/en_de_human_metric_ft.jsonl \
         --metric ${metric} \
-        -l logs/en_de_censer_3_${metric}.jsonl \
+        -l logs/en_de_censer_2f_${metric}.jsonl \
+        --epochs 100 \
+;"
+
+
+# fine tune
+metric=zscore
+echo "Submitting JOIST with $metric metric";
+sbatch --time=4-0 --ntasks=8 --mem-per-cpu=3G --gpus=1 \
+    --job-name="censer_5f (finetune)" \
+    --output="lsf_logs/censer_5f.log" \
+    --wrap="\
+        python3 src/run_me_model.py \
+        -m joist --dev-n 1000 \
+        -mp models/en_de_censer_5_ter.pt \
+        -dt computed/en_de_human_metric_ft.jsonl \
+        --metric ${metric} \
+        -l logs/en_de_censer_5f_${metric}.jsonl \
         --epochs 100 \
 ;"
 
