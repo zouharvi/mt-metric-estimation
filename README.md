@@ -18,3 +18,6 @@ The paper will be presented at EACL 2023. For now, cite as:
 ```
 
 Code usage instructions WIP.
+
+
+[![Paper video presentation](https://img.youtube.com/vi/feMWDVylhac/0.jpg)](https://www.youtube.com/watch?v=feMWDVylhac)
