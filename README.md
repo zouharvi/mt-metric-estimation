@@ -33,4 +33,4 @@ The paper was presented at EACL 2023.
 
 Code usage instructions WIP.
 
-<img src="meta/poster.svg" width="700em">
+<img src="meta/poster_safe.svg" width="700em">
